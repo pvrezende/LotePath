@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { Repository, DataSource } from "typeorm";
 import { Usuario } from "../entities/Usuario";
 import { createUserDTOSchema } from "../dtos/userDTO.js";
+import { AppError } from "../errors/AppError";
 
 export class UsuarioService {
 
@@ -18,7 +19,7 @@ export class UsuarioService {
     async getById(id_user: string) {
         const user = await this.userRepo.findOneBy({ id_user });
         if (!user) {
-            throw new Error('Usuario não encontrado');
+            throw new AppError('Usuario não encontrado', 404);
         }
         return user;
     }
@@ -26,7 +27,7 @@ export class UsuarioService {
     async getEmail(email: string) {
         const user = await this.userRepo.findOneBy({ email });
         if (!user) {
-            throw new Error('Email não encontrado');
+            throw new AppError('Email não encontrado', 404);
         }
         return user.email;
     }
@@ -34,7 +35,7 @@ export class UsuarioService {
     async createUser(data: createUserDTOSchema) {
         const usuario = await this.getEmail(data.email);
         if (usuario) {
-            throw new Error('Email já existe');
+            throw new AppError('Email já existe', 409);
         }
         data.senha = await bcrypt.hash(data.senha, 2);
         const novoUsuario = await this.userRepo.create(data);
