@@ -1,3 +1,8 @@
+import bcrypt from "bcryptjs";
+import { Repository, DataSource } from "typeorm";
+import { Usuario } from "../entities/Usuario";
+import { createUserDTOSchema } from "../dtos/userDTO.js";
+
 export class UsuarioService {
 
     private userRepo: Repository<Usuario>;
@@ -10,22 +15,23 @@ export class UsuarioService {
         return this.userRepo.find();
     }
 
-    async getById(id: string) {
-        const user = await this.userRepo.findOneBy({ id });
+    async getById(id_user: string) {
+        const user = await this.userRepo.findOneBy({ id_user });
         if (!user) {
             throw new Error('Usuario não encontrado');
         }
         return user;
     }
 
-    async getEmail(id: string) {
-        const user = await this.userRepo.findOneBy({ email: id });
+    async getEmail(email: string) {
+        const user = await this.userRepo.findOneBy({ email });
         if (!user) {
             throw new Error('Email não encontrado');
         }
         return user.email;
     }
-    async createUser(data: Usuario) {
+
+    async createUser(data: createUserDTOSchema) {
         const usuario = await this.getEmail(data.email);
         if (usuario) {
             throw new Error('Email já existe');
@@ -36,4 +42,24 @@ export class UsuarioService {
         return novoUsuario;
 
     }
+
+    async updateUser(id: string, data: Partial<Usuario>) {
+        if (data.nome !== undefined) {
+            const usuario = await this.getById(id);
+            usuario.nome = data.nome;
+            await this.userRepo.save(usuario);
+        }
+        if (data.email !== undefined) {
+            const usuario = await this.getById(id);
+            usuario.email = data.email;
+            await this.userRepo.save(usuario);
+        }
+        if (data.senha !== undefined) {
+            const usuario = await this.getById(id);
+            usuario.senha = await bcrypt.hash(data.senha, 2);
+            await this.userRepo.save(usuario);
+        }
+
+    }
+
 }
