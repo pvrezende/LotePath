@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UsuarioService } from "../services/UsuarioService";
 import { AppError } from "../errors/AppError";
+import { CreateUserDTO } from "../dtos/userDTO";
 
 export class UsuarioController {
     private usuarioService: UsuarioService;
@@ -43,3 +44,4 @@ export class UsuarioController {
             }
         }
     }
+}

@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import { Repository, DataSource } from "typeorm";
 import { Usuario } from "../entities/Usuario";
 import { createUserDTOSchema } from "../dtos/userDTO.js";
+import { z } from "zod";
 import { AppError } from "../errors/AppError";
+
+type CreateUserDTO = z.infer<typeof createUserDTOSchema>;
 
 export class UsuarioService {
 
@@ -32,7 +35,7 @@ export class UsuarioService {
         return user.email;
     }
 
-    async createUser(data: createUserDTOSchema) {
+    async createUser(data: CreateUserDTO) {
         const usuario = await this.getEmail(data.email);
         if (usuario) {
             throw new AppError('Email já existe', 409);
