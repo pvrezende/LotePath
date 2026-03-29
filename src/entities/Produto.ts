@@ -1,21 +1,26 @@
-import { Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Lote } from "./Lote";
 
+@Entity()
 export class Produto {
     @PrimaryGeneratedColumn('uuid')
     id_produto!: string;
 
-    @Column({type: 'varchar', unique: true, nullable: false})
+    @OneToMany(() => Lote, (lote) => lote.produto)
+    lotes!: Lote[];
+
+    @Column({ type: 'varchar', unique: true, nullable: false })
     codigo!: string;
 
-    @Column ({type: 'varchar', nullable: false})
+    @Column({ type: 'varchar', nullable: false })
     nome!: string;
 
-    @Column({type: 'varchar', nullable: true})
+    @Column({ type: 'varchar', nullable: true })
     descricao!: string;
 
-    @Column({type: 'varchar', nullable: false})
+    @Column({ type: 'varchar', nullable: false })
     linha!: string;
 
-    @Column ({type: 'boolean', default: true})
+    @Column({ type: 'boolean', default: true })
     ativo!: boolean;
 }

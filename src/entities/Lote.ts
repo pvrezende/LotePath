@@ -1,25 +1,48 @@
-import { Column, DataSource, ForeignKey, PrimaryColumn } from "typeorm";
+import { Column, Entity, In, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Produto } from "./Produto.js";
+import { Usuario } from "./Usuario.js";
+import { Inspecao_lote } from "./Inspecao_lote.js";
 
-export class Produto {
 
-    @PrimaryColumnGenerated('uuid')
-    id_produto!: string;
+@Entity()
+export class Lote {
 
-    @Column({type: 'varchar', unique: true, nullable: false})
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
+
+    @Column({ type: 'varchar', unique: true, nullable: false })
     numero_lote!: string;
 
-    @Column({type: ForeignKey(() => Produto), nullable: false})
-    id_produto!: string;
+    @ManyToOne(() => Produto, (produto) => produto.lotes)
+    produto_id!: Produto;
 
-    @Column({type: DataSource, nullable: false})
+    @ManyToOne(() => Lote, (lote) => lote.insumos)
+    lote!: Lote;
+    
+    @OneToOne (()=> Inspecao_lote,(inspecao)=> inspecao.lote)
+    inspecao!: Inspecao_lote;
+
+    @Column({ type: 'date', nullable: false })
     data_producao!: Date;
 
-    @Column ({enum: 'manha' | 'tarde' | 'noite', nullable: false})
-    turno!: string;
+    @Column({ type: 'enum', enum: ['manha', 'tarde', 'noite'], nullable: false })
+    turno!: 'manha' | 'tarde' | 'noite';
 
-    @Column({type: ForeignKey(() => Usuario), nullable: false})
-    operador_id!: string;
+    @ManyToOne(() => Usuario, (usuario) => usuario.usuarios)
+    operador_id!: Usuario;
 
-    @Column ({type: 'integer', nullable: false})
+    @Column({ type: 'integer', nullable: false })
     quantidade_produto!: number;
+
+    @Column({ type: 'enum', enum: ['em_producao', 'aguardando_inspecao', 'aprovado_restricao', 'aprovado', 'reprovado'] })
+    status!: 'em_producao' | 'aguardando_inspecao' | 'aprovado_restricao' | 'aprovado' | 'reprovado';
+
+    @Column({ type: 'varchar', nullable: true })
+    observacoes!: string | null;
+
+    @Column({ type: 'timestamptz', default: () => 'now()' })
+    aberto_em!: Date;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    encerrado_em!: Date | null;
 }

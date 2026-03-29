@@ -1,9 +1,20 @@
-import { Column, CreateDateColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Perfil } from "../types/Perfil.js";
+import { Lote } from "./Lote";
+import { Inspecao_lote } from "./Inspecao_lote.js";
 
-export class Usuario{
+
+@Entity('usuarios')
+export class Usuario {
 
     @PrimaryGeneratedColumn('uuid')
     id_user!: string;
+
+    @OneToMany (() => Lote, (lote)=> lote.usuario)
+    usuarios!: Lote[];
+
+    @OneToOne (()=> Inspecao_lote,(inspecao)=> inspecao.inspetor_id)
+    inspecoes!: Inspecao_lote[];
 
     @Column({ type: 'varchar', length: 100 })
     nome!: string;
@@ -12,7 +23,7 @@ export class Usuario{
     email!: string;
 
     @Column({ type: 'varchar', select: false })
-    senha!: string; 
+    senha!: string;
 
     @Column({ type: 'enum', enum: Perfil, default: Perfil.SOLICITANTE })
     perfil!: Perfil;
