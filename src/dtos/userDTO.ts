@@ -4,7 +4,7 @@ import { Perfil } from '../types/Perfil.js';
 
 export const createUserDTOSchema = z.object({
     nome: z.string().trim().min(3).max(100, "O nome deve ter entre 3 e 100 caracteres"),
-    email: z.string().email((pattern: z.regexes.unicodeEmail, "Email inválido")),
+    email: z.string().email("Email inválido"),
     senha: z.string()
         .min(6)
         .refine(s => /[A-Za-z0-9]/.test(s), "A senha deve conter no mínimo 6 caracteres"),

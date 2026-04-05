@@ -6,6 +6,7 @@ import { AppDataSource } from './database/AppDataSource.js';
 import indexRouter from './routes/indexRouter.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
+
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
@@ -17,6 +18,10 @@ app.use(errorHandler);
 // Rotas de teste
 app.get('/', (req, res) => {
     res.send('Hello, World!');
+});
+
+app.get("/users", (req, res) => {
+    res.send("Rota de usuários");
 });
 
 AppDataSource.initialize()
