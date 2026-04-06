@@ -1,21 +1,28 @@
 import { z } from "zod";
-import { Perfil } from '../types/Perfil.js';
-
+import { Perfil } from "../types/Perfil.js";
 
 export const createUserDTOSchema = z.object({
-    nome: z.string().trim().min(3).max(100, "O nome deve ter entre 3 e 100 caracteres"),
-    email: z.string().email("Email inválido"),
-    senha: z.string()
-        .min(6)
-        .refine(s => /[A-Za-z0-9]/.test(s), "A senha deve conter no mínimo 6 caracteres"),
-    perfil: z.enum(Perfil)
+    nome: z
+        .string()
+        .trim()
+        .min(3, "O nome deve ter no mínimo 3 caracteres")
+        .max(100, "O nome deve ter no máximo 100 caracteres"),
 
+    email: z
+        .string()
+        .trim()
+        .email("Email inválido"),
+
+    senha: z
+        .string()
+        .min(6, "A senha deve ter no mínimo 6 caracteres"),
+
+    perfil: z.nativeEnum(Perfil)
 });
 
 export const updateUserDTOSchema = createUserDTOSchema
     .omit({ senha: true })
-    .partial()
-
+    .partial();
 
 export type CreateUserDTO = z.infer<typeof createUserDTOSchema>;
 export type UpdateUserDTO = z.infer<typeof updateUserDTOSchema>;

@@ -1,5 +1,5 @@
 export enum Perfil {
-    SOLICITANTE,
-    GESTOR,
-    COMPRADOR
+    OPERADOR = "operador",
+    INSPETOR = "inspetor",
+    GESTOR = "gestor"
 }
