@@ -17,60 +17,98 @@ O projeto foi construído utilizando as melhores práticas do ecossistema JavaSc
 
 ## 📂 Arquitetura do Projeto
 
-O código está organizado em uma arquitetura em camadas para separar responsabilidades, facilitar a manutenção e escalar o sistema:
-
 ```text
 src/
- ├── controllers/   # Lida com as requisições HTTP e envia as respostas.
- ├── database/      # Configuração do AppDataSource (TypeORM).
- ├── dtos/          # Data Transfer Objects (Tipagens e schemas do Zod).
- ├── entities/      # Modelos de banco de dados (Produto, Lote, Usuario, etc.).
- ├── errors/        # Classes customizadas para tratamento de exceções.
- ├── middlewares/   # Interceptadores (ex: Autenticação, Error Handler global).
- ├── routes/        # Definição dos endpoints da API.
- ├── services/      # Regras de negócio da aplicação.
- ├── types/         # Definições de tipos globais do TypeScript.
- └── server.ts      # Ponto de entrada (Entrypoint) da aplicação.
+ ├── controllers/   
+ ├── database/      
+ ├── dtos/          
+ ├── entities/      
+ ├── errors/        
+ ├── middlewares/   
+ ├── routes/        
+ ├── services/      
+ ├── types/         
+ └── server.ts      
 ```
 
 ## ⚙️ Como Executar Localmente
 
-Siga os passos abaixo para configurar o ambiente de desenvolvimento na sua máquina.
-
 ### 1. Pré-requisitos
-- [Node.js](https://nodejs.org/) instalado.
-- [PostgreSQL](https://www.postgresql.org/) rodando localmente (porta `5432`).
+- Node.js instalado
+- PostgreSQL instalado
 
-### 2. Configuração do Banco de Dados e Variáveis de Ambiente
-No seu gerenciador do PostgreSQL, crie um banco de dados vazio:
+### 2. Configuração do Banco
+
 ```sql
-CREATE DATABASE lotepath;
+CREATE DATABASE indt_lotepath;
 ```
 
-Crie um arquivo `.env` na raiz do projeto (use o `.env.example` caso exista como base) e configure suas credenciais locais do Postgres e a porta do servidor:
+### 3. Variáveis de Ambiente
+
+Copie o arquivo `.env.example` e renomeie para `.env`.
+
+No Windows:
+- Clique com botão direito → copiar → colar → renomear para `.env`
+
+Ou via terminal:
+
+```bash
+copy .env.example .env
+```
+
+Configure:
+
 ```env
-PORT=3000
-# Adicione aqui as variáveis de conexão do TypeORM/JWT que o projeto exigir
+# Host do banco
+DB_HOST=localhost
+
+# Porta da aplicação
+PORT=5336
+
+# Usuário do banco
+DB_USER=postgres
+
+# Senha do banco
+DB_PASS=sua_senha
+
+# Nome do banco
+DB_NAME=indt_lotepath
 ```
 
-### 3. Instalação das Dependências
-Clone o repositório, entre na pasta do projeto e rode o comando:
+### 4. Instalar dependências
+
 ```bash
 npm install
 ```
 
-### 4. Rodando em Modo de Desenvolvimento
-Para iniciar o servidor com *hot-reload* (usando o `tsx`), utilize o comando:
+### 5. Rodar o projeto
+
 ```bash
 npm run dev
 ```
-> O servidor iniciará, fará a sincronização automática das tabelas no banco de dados através do TypeORM e ficará disponível em `http://localhost:3000`.
 
-## 📜 Scripts Disponíveis
+Servidor disponível em:
+http://localhost:5336
 
-- `npm run dev`: Inicia o servidor em modo de desenvolvimento (observando mudanças).
-- `npm run build`: Compila o código TypeScript para JavaScript puro na pasta `/dist`.
-- `npm run start`: Executa a versão compilada para produção.
+## 🔎 Testando a API
+
+Após iniciar o servidor, acesse:
+
+http://localhost:5336
+
+Se estiver rodando corretamente, a API deve responder.
+
+## 📜 Scripts
+
+- `npm run dev` → inicia o servidor em modo desenvolvimento (hot reload)
+- `npm run build` → compila o TypeScript para JavaScript
+- `npm run start` → executa a versão de produção
 
 ---
-*Desenvolvido pela equipe para o programa INDT.*
+
+Desenvolvido para o programa INDT.
+
+## 📌 Observações
+
+- Certifique-se de que o PostgreSQL está rodando antes de iniciar a aplicação
+- As tabelas são sincronizadas automaticamente pelo TypeORM
