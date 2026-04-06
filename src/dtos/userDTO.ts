@@ -17,9 +17,7 @@ export const createUserDTOSchema = z.object({
         .string()
         .min(6, "A senha deve ter no mínimo 6 caracteres"),
 
-    perfil: z.nativeEnum(Perfil, {
-        errorMap: () => ({ message: "Perfil inválido" })
-    })
+    perfil: z.nativeEnum(Perfil)
 });
 
 export const updateUserDTOSchema = createUserDTOSchema
