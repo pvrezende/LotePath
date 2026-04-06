@@ -1,4 +1,9 @@
 import { DataSource } from "typeorm";
+import { Usuario } from "../entities/Usuario.js";
+import { Produto } from "../entities/Produto.js";
+import { Lote } from "../entities/Lote.js";
+import { InsumoLote } from "../entities/Insumo_lote.js";
+import { InspecaoLote } from "../entities/Inspecao_lote.js";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -9,5 +14,5 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME as string,
     synchronize: true,
     logging: true,
-    entities: ["src/entities/*.{ts,js}", "dist/entities/*.{ts,js}"]
+    entities: [Usuario, Produto, Lote, InsumoLote, InspecaoLote],
 });
