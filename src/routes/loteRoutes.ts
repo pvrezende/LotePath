@@ -3,12 +3,15 @@ import { AppDataSource } from "../database/AppDataSource.js";
 import { LoteService } from "../services/LoteService.js";
 import { LoteController } from "../controllers/LoteController.js";
 import { validateBody } from "../middlewares/validateBody.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { createLoteDTOSchema, updateStatusLoteDTOSchema } from "../dtos/LoteDTO.js";
 
 const loteService = new LoteService(AppDataSource);
 const loteController = new LoteController(loteService);
 
 const loteRoutes = Router();
+
+loteRoutes.use(authMiddleware);
 
 loteRoutes.get("/", loteController.getAll.bind(loteController));
 loteRoutes.get("/:id", loteController.getById.bind(loteController));
