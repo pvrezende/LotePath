@@ -39,11 +39,11 @@ export class InspecaoService {
         }
 
         const inspecao = this.inspecaoRepo.create({
+            lote,
+            inspetor,
             resultado: data.resultado,
             quantidade_repr: data.quantidade_repr ?? 0,
-            descricao_desvio: data.descricao_desvio ?? null,
-            lote: { id: lote.id } as Lote,
-            inspetor: { id: inspetor.id } as Usuario
+            descricao_desvio: data.descricao_desvio ?? null
         });
 
         const inspecaoSalva = await this.inspecaoRepo.save(inspecao);
@@ -51,17 +51,22 @@ export class InspecaoService {
         lote.quantidade_repr = data.quantidade_repr ?? 0;
         lote.status = data.resultado;
         lote.encerrado_em = new Date();
+        lote.inspecao = inspecaoSalva;
 
         await this.loteRepo.save(lote);
 
-        const inspecaoCompleta = await this.inspecaoRepo.findOne({
-            where: { id: inspecaoSalva.id },
+        const loteAtualizado = await this.loteRepo.findOne({
+            where: { id: lote.id },
             relations: {
-                lote: true,
-                inspetor: true
+                produto: true,
+                operador: true,
+                insumos: true,
+                inspecao: {
+                    inspetor: true
+                }
             }
         });
 
-        return inspecaoCompleta;
+        return loteAtualizado;
     }
 }

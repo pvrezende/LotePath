@@ -14,9 +14,9 @@ export class InspecaoController {
             const loteId = req.params.id as string;
             const data = req.body as CreateInspecaoDTO;
 
-            const inspecao = await this.inspecaoService.create(loteId, data);
+            const lote = await this.inspecaoService.create(loteId, data);
 
-            return res.status(201).json({ inspecao });
+            return res.status(201).json({ lote });
         } catch (error) {
             return next(error);
         }
