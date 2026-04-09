@@ -4,6 +4,8 @@ import { LoteService } from "../services/LoteService.js";
 import { LoteController } from "../controllers/LoteController.js";
 import { validateBody } from "../middlewares/validateBody.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { authorizeRoles } from "../middlewares/authorizeRoles.js";
+import { Perfil } from "../types/Perfil.js";
 import { createLoteDTOSchema, updateStatusLoteDTOSchema } from "../dtos/LoteDTO.js";
 
 const loteService = new LoteService(AppDataSource);
@@ -13,9 +15,30 @@ const loteRoutes = Router();
 
 loteRoutes.use(authMiddleware);
 
-loteRoutes.get("/", loteController.getAll.bind(loteController));
-loteRoutes.get("/:id", loteController.getById.bind(loteController));
-loteRoutes.post("/", validateBody(createLoteDTOSchema), loteController.create.bind(loteController));
-loteRoutes.patch("/:id/status", validateBody(updateStatusLoteDTOSchema), loteController.updateStatus.bind(loteController));
+loteRoutes.get(
+    "/",
+    authorizeRoles(Perfil.OPERADOR, Perfil.INSPETOR, Perfil.GESTOR),
+    loteController.getAll.bind(loteController)
+);
+
+loteRoutes.get(
+    "/:id",
+    authorizeRoles(Perfil.OPERADOR, Perfil.INSPETOR, Perfil.GESTOR),
+    loteController.getById.bind(loteController)
+);
+
+loteRoutes.post(
+    "/",
+    authorizeRoles(Perfil.OPERADOR, Perfil.GESTOR),
+    validateBody(createLoteDTOSchema),
+    loteController.create.bind(loteController)
+);
+
+loteRoutes.patch(
+    "/:id/status",
+    authorizeRoles(Perfil.OPERADOR, Perfil.GESTOR),
+    validateBody(updateStatusLoteDTOSchema),
+    loteController.updateStatus.bind(loteController)
+);
 
 export default loteRoutes;
