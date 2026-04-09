@@ -6,6 +6,7 @@ import loteRoutes from "./loteRoutes.js";
 import inspecaoRoutes from "./inspecaoRoutes.js";
 import insumoRoutes from "./insumoRoutes.js";
 import rastreabilidadeRoutes from "./rastreabilidadeRoutes.js";
+import dashboardRoutes from "./dashboardRoutes.js";
 
 const indexRouter = Router();
 
@@ -16,5 +17,6 @@ indexRouter.use("/lotes", loteRoutes);
 indexRouter.use(inspecaoRoutes);
 indexRouter.use(insumoRoutes);
 indexRouter.use(rastreabilidadeRoutes);
+indexRouter.use(dashboardRoutes);
 
 export default indexRouter;
