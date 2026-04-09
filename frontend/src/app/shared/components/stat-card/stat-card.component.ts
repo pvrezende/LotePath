@@ -1,38 +1,78 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LoteStatus } from '../../../features/dashboard/models/dashboard.model';
 
 @Component({
-  selector: 'app-stat-card',
+  selector: 'app-status-badge',
   standalone: true,
+  imports: [CommonModule],
   template: `
-    <article class="card">
-      <p class="label">{{ label }}</p>
-      <h3 class="value">{{ value }}</h3>
-    </article>
+    <span class="badge" [ngClass]="status">
+      <span class="dot"></span>
+      {{ label }}
+    </span>
   `,
   styles: [
     `
-      .card {
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-        border: 1px solid #e5e7eb;
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 150px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: capitalize;
       }
 
-      .label {
-        color: #6b7280;
-        font-size: 14px;
-        margin-bottom: 10px;
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: currentColor;
       }
 
-      .value {
-        font-size: 28px;
-        color: #111827;
+      .em_producao {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .aguardando_inspecao {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .aprovado {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .aprovado_restricao {
+        background: #ffedd5;
+        color: #c2410c;
+      }
+
+      .reprovado {
+        background: #fee2e2;
+        color: #b91c1c;
       }
     `,
   ],
 })
-export class StatCardComponent {
-  @Input({ required: true }) label!: string;
-  @Input({ required: true }) value!: string | number;
+export class StatusBadgeComponent {
+  @Input({ required: true }) status!: LoteStatus;
+
+  get label(): string {
+    const labels: Record<LoteStatus, string> = {
+      em_producao: 'Em produção',
+      aguardando_inspecao: 'Aguardando inspeção',
+      aprovado: 'Aprovado',
+      aprovado_restricao: 'Aprovado com restrição',
+      reprovado: 'Reprovado',
+    };
+
+    return labels[this.status];
+  }
 }
