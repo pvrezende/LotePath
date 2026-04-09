@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   DashboardIndicadores,
   DashboardLote,
 } from '../../models/dashboard.model';
+import { DashboardService } from '../../services/dashboard.service';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -29,65 +30,75 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         </div>
       </div>
 
-      <div class="stats-grid">
-        <app-stat-card
-          label="Lotes produzidos hoje"
-          [value]="indicadores.lotesProduzidosHoje"
-        />
-        <app-stat-card
-          label="Unidades produzidas hoje"
-          [value]="indicadores.unidadesProduzidasHoje"
-        />
-        <app-stat-card
-          label="Taxa de aprovação do mês"
-          [value]="indicadores.taxaAprovacaoMes + '%'"
-        />
-        <app-stat-card
-          label="Lotes aguardando inspeção"
-          [value]="indicadores.lotesAguardandoInspecao"
-        />
-      </div>
-
-      <section class="table-section">
-        <div class="section-header">
-          <h3>Últimos lotes</h3>
-          <p>Lista dos 10 lotes mais recentes para acompanhamento rápido.</p>
+      @if (loading) {
+        <div class="feedback-box">
+          <p>Carregando dados do dashboard...</p>
+        </div>
+      } @else if (errorMessage) {
+        <div class="feedback-box error">
+          <p>{{ errorMessage }}</p>
+        </div>
+      } @else {
+        <div class="stats-grid">
+          <app-stat-card
+            label="Lotes produzidos hoje"
+            [value]="indicadores.lotesProduzidosHoje"
+          />
+          <app-stat-card
+            label="Unidades produzidas hoje"
+            [value]="indicadores.unidadesProduzidasHoje"
+          />
+          <app-stat-card
+            label="Taxa de aprovação do mês"
+            [value]="indicadores.taxaAprovacaoMes + '%'"
+          />
+          <app-stat-card
+            label="Lotes aguardando inspeção"
+            [value]="indicadores.lotesAguardandoInspecao"
+          />
         </div>
 
-        @if (ultimosLotes.length > 0) {
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Número do lote</th>
-                  <th>Produto</th>
-                  <th>Operador</th>
-                  <th>Data</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (lote of ultimosLotes; track lote.id) {
-                  <tr>
-                    <td class="strong">{{ lote.numero_lote }}</td>
-                    <td>{{ lote.produto }}</td>
-                    <td>{{ lote.operador }}</td>
-                    <td>{{ lote.data_producao }}</td>
-                    <td>
-                      <app-status-badge [status]="lote.status" />
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+        <section class="table-section">
+          <div class="section-header">
+            <h3>Últimos lotes</h3>
+            <p>Lista dos 10 lotes mais recentes para acompanhamento rápido.</p>
           </div>
-        } @else {
-          <app-empty-state
-            title="Nenhum lote encontrado"
-            description="Ainda não existem lotes suficientes para exibir no dashboard."
-          />
-        }
-      </section>
+
+          @if (ultimosLotes.length > 0) {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Número do lote</th>
+                    <th>Produto</th>
+                    <th>Operador</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (lote of ultimosLotes; track lote.id) {
+                    <tr>
+                      <td class="strong">{{ lote.numero_lote }}</td>
+                      <td>{{ lote.produto }}</td>
+                      <td>{{ lote.operador }}</td>
+                      <td>{{ lote.data_producao }}</td>
+                      <td>
+                        <app-status-badge [status]="lote.status" />
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <app-empty-state
+              title="Nenhum lote encontrado"
+              description="Ainda não existem lotes suficientes para exibir no dashboard."
+            />
+          }
+        </section>
+      }
     </section>
   `,
   styles: [
@@ -166,6 +177,19 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         font-weight: 700;
       }
 
+      .feedback-box {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+      }
+
+      .feedback-box.error {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #b91c1c;
+      }
+
       @media (max-width: 1100px) {
         .stats-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -180,54 +204,60 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
     `,
   ],
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+  private dashboardService = inject(DashboardService);
+
+  loading = true;
+  errorMessage = '';
+
   indicadores: DashboardIndicadores = {
-    lotesProduzidosHoje: 8,
-    unidadesProduzidasHoje: 1240,
-    taxaAprovacaoMes: 96,
-    lotesAguardandoInspecao: 3,
+    lotesProduzidosHoje: 0,
+    unidadesProduzidasHoje: 0,
+    taxaAprovacaoMes: 0,
+    lotesAguardandoInspecao: 0,
   };
 
-  ultimosLotes: DashboardLote[] = [
-    {
-      id: '1',
-      numero_lote: 'LOT-2026-00021',
-      produto: 'Placa Eletrônica A',
-      operador: 'Operador Teste',
-      data_producao: '09/04/2026',
-      status: 'em_producao',
-    },
-    {
-      id: '2',
-      numero_lote: 'LOT-2026-00020',
-      produto: 'Módulo Sensor B',
-      operador: 'Operador Teste',
-      data_producao: '09/04/2026',
-      status: 'aguardando_inspecao',
-    },
-    {
-      id: '3',
-      numero_lote: 'LOT-2026-00019',
-      produto: 'Painel de Controle C',
-      operador: 'Operador Teste',
-      data_producao: '08/04/2026',
-      status: 'aprovado',
-    },
-    {
-      id: '4',
-      numero_lote: 'LOT-2026-00018',
-      produto: 'Placa Eletrônica A',
-      operador: 'Operador Teste',
-      data_producao: '08/04/2026',
-      status: 'aprovado_restricao',
-    },
-    {
-      id: '5',
-      numero_lote: 'LOT-2026-00017',
-      produto: 'Módulo Sensor B',
-      operador: 'Operador Teste',
-      data_producao: '07/04/2026',
-      status: 'reprovado',
-    },
-  ];
+  ultimosLotes: DashboardLote[] = [];
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
+
+  private loadDashboard(): void {
+    console.log('Chamando dashboard...');
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.dashboardService.getDashboard().subscribe({
+      next: (response) => {
+        console.log('Resposta dashboard:', response);
+        this.indicadores = response.indicadores;
+        this.ultimosLotes = response.ultimosLotes;
+        this.loading = false;
+        console.log('Loading final:', this.loading);
+      },
+      error: (error) => {
+        console.error('Erro dashboard:', error);
+        this.loading = false;
+
+        if (error.status === 401) {
+          this.errorMessage = 'Sua sessão expirou. Faça login novamente.';
+          return;
+        }
+
+        if (error.status === 403) {
+          this.errorMessage = 'Você não tem permissão para acessar o dashboard.';
+          return;
+        }
+
+        if (error.status === 0) {
+          this.errorMessage =
+            'Não foi possível conectar ao backend do dashboard.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao carregar os dados do dashboard.';
+      },
+    });
+  }
 }
