@@ -1,114 +1,198 @@
-# 🏭 LotePath - Backend (API)
+# LotePath
 
-Repositório contendo o backend do **LotePath**, um sistema de rastreamento de produção por lote desenvolvido para o Módulo 10 da trilha Full Stack do INDT, focado nas demandas do Polo Industrial de Manaus (PIM).
+Sistema web de rastreamento de produção por lotes, desenvolvido para o programa **INDT**, com foco em controle produtivo, inspeção de qualidade, rastreabilidade e apoio a cenários de recall.
 
-## 🚀 O Projeto
+## Visão geral
 
-O LotePath fornece uma API RESTful robusta para digitalizar o controle de produção, permitindo a abertura de lotes, vínculo de insumos (rastreabilidade de 1º nível) e registros de inspeção de qualidade. O grande diferencial de negócio é a **rastreabilidade reversa**, capaz de identificar rapidamente todos os lotes afetados por um insumo suspeito.
+O LotePath foi criado para digitalizar o processo de rastreamento de lotes de produção, permitindo registrar:
 
-## 🛠️ Stack Tecnológica
+- abertura de lotes
+- vínculo de insumos por lote
+- inspeção de qualidade
+- rastreabilidade por lote e por insumo
+- dashboard com indicadores operacionais
 
-O projeto foi construído utilizando as melhores práticas do ecossistema JavaScript/TypeScript moderno (ES Modules):
-- **Core:** Node.js (v22), Express.js, TypeScript.
-- **Banco de Dados:** PostgreSQL com ORM TypeORM.
-- **Segurança & Autenticação:** JWT (JSON Web Tokens), Bcryptjs, Helmet, Express Rate Limit.
-- **Validação:** Zod (para validação de schemas e DTOs).
-- **Execução & Build:** `tsx` (para dev) e `tsc` (para build).
+O objetivo do projeto é facilitar a identificação de lotes afetados em caso de falha de insumo, não conformidade ou recall, reduzindo tempo de análise e melhorando a visibilidade do processo produtivo.
 
-## 📂 Arquitetura do Projeto
+## Problema que o projeto resolve
+
+Em ambientes industriais, a rastreabilidade de produção é essencial para responder perguntas como:
+
+- qual lote foi produzido em determinada data
+- quais insumos foram usados nesse lote
+- quem foi o operador responsável
+- quais lotes podem ter sido afetados por um insumo suspeito
+
+Sem um sistema centralizado, esse processo costuma depender de papel, planilhas ou consultas manuais, tornando recalls e auditorias mais lentos e arriscados. O LotePath organiza essas informações em uma aplicação web com backend e frontend integrados. :contentReference[oaicite:0]{index=0}
+
+## Funcionalidades implementadas
+
+### Backend
+- autenticação com JWT
+- controle de acesso por perfil
+- CRUD de produtos
+- abertura de lotes com número automático
+- atualização de status do lote
+- vínculo de insumos por lote
+- registro de inspeção
+- rastreabilidade por lote
+- rastreabilidade por insumo
+- endpoint de dashboard com indicadores e últimos lotes
+
+### Frontend
+- login com integração real ao backend
+- armazenamento de token e sessão
+- rotas protegidas com guard
+- interceptor para envio automático do token
+- logout
+- dashboard com:
+  - indicadores
+  - últimos lotes
+  - badges de status
+  - loading
+  - tratamento de erro
+  - empty state
+- layout com navbar e footer
+
+## Stack utilizada
+
+### Frontend
+- Angular
+- TypeScript
+- CSS
+
+### Backend
+- Node.js
+- Express
+- TypeScript
+- TypeORM
+- PostgreSQL
+- JWT
+- Zod
+
+## Estrutura do projeto
 
 ```text
-src/
- ├── controllers/   
- ├── database/      
- ├── dtos/          
- ├── entities/      
- ├── errors/        
- ├── middlewares/   
- ├── routes/        
- ├── services/      
- ├── types/         
- └── server.ts      
-```
+LotePath/
+├── backend/                  # pasta auxiliar enviada no projeto
+├── frontend/                 # aplicação Angular
+├── src/                      # backend principal
+│   ├── controllers/
+│   ├── database/
+│   ├── dtos/
+│   ├── entities/
+│   ├── errors/
+│   ├── middlewares/
+│   ├── routes/
+│   ├── services/
+│   ├── types/
+│   └── server.ts
+├── package.json
+└── README.md
 
-## ⚙️ Como Executar Localmente
-
-### 1. Pré-requisitos
-- Node.js instalado
-- PostgreSQL instalado
-
-### 2. Configuração do Banco
-
-```sql
-CREATE DATABASE indt_lotepath;
-```
-
-### 3. Variáveis de Ambiente
-
-Copie o arquivo `.env.example` e renomeie para `.env`.
-
-No Windows:
-- Clique com botão direito → copiar → colar → renomear para `.env`
-
-Ou via terminal:
-
-```bash
-copy .env.example .env
-```
-
-Configure:
-
-```env
-# Host do banco
-DB_HOST=localhost
-
-# Porta da aplicação
-PORT=5336
-
-# Usuário do banco
-DB_USER=postgres
-
-# Senha do banco
-DB_PASS=sua_senha
-
-# Nome do banco
-DB_NAME=indt_lotepath
-```
-
-### 4. Instalar dependências
-
-```bash
+-----------------------------------------------------
+Como executar o backend
+1. Instale as dependências
 npm install
-```
+-----------------------------------------------------
+2. Configure o arquivo .env
 
-### 5. Rodar o projeto
+Use o .env.example como base e crie um arquivo .env na raiz.
 
-```bash
+Exemplo:
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=sua_senha
+DB_NAME=indt_lotepath
+PORT=5336
+JWT_SECRET=sua_chave_jwt
+-----------------------------------------------------
+3. Crie o banco PostgreSQL
+CREATE DATABASE indt_lotepath;
+-----------------------------------------------------
+4. Rode o seed
+npm run seed
+-----------------------------------------------------
+5. Inicie o backend
 npm run dev
-```
-
-Servidor disponível em:
+-----------------------------------------------------
+Backend disponível em:
 http://localhost:5336
+-----------------------------------------------------
+#####################################################
+-----------------------------------------------------
 
-## 🔎 Testando a API
+Como executar o frontend
+1. Entre na pasta do frontend
+cd frontend
+-----------------------------------------------------
+2. Instale as dependências
+npm install
+-----------------------------------------------------
+3. Inicie o frontend
+ng serve
+Frontend disponível em:
+http://localhost:4200
+-----------------------------------------------------
 
-Após iniciar o servidor, acesse:
+Credenciais de teste
 
-http://localhost:5336
+Criadas pelo seed do backend:
 
-Se estiver rodando corretamente, a API deve responder.
+Operador
+E-mail: operador@lotepath.com
+Senha: 123456
+Inspetor
+E-mail: inspetor@lotepath.com
+Senha: 123456
+Rotas principais da API
+Autenticação
+POST /auth/login
+Produtos
+GET /produtos
+GET /produtos/:id
+POST /produtos
+PUT /produtos/:id
+DELETE /produtos/:id
+Lotes
+GET /lotes
+GET /lotes/:id
+POST /lotes
+PATCH /lotes/:id/status
+Insumos
+POST /lotes/:id/insumos
+DELETE /lotes/:id/insumos/:insumoId
+Inspeção
+POST /lotes/:id/inspecao
+Rastreabilidade
+GET /rastreabilidade/lote/:id
+GET /rastreabilidade/insumo?valor=...
+Dashboard
+GET /dashboard
+Fluxo principal de demonstração
 
-## 📜 Scripts
+Sugestão de apresentação final:
 
-- `npm run dev` → inicia o servidor em modo desenvolvimento (hot reload)
-- `npm run build` → compila o TypeScript para JavaScript
-- `npm run start` → executa a versão de produção
+acessar a tela de login
+autenticar com usuário de teste
+abrir o dashboard
+mostrar indicadores e últimos lotes
+mostrar os status dos lotes
+navegar para o fluxo de rastreabilidade
+demonstrar o cenário de recall com insumo suspeito
 
----
+O dashboard com 4 indicadores e os últimos 10 lotes faz parte do entregável da Fase 5.
+
+Status do projeto
+
+Projeto em evolução, com backend funcional até a Fase 5 e frontend em construção orientada para demonstração final.
+
+Autores
+
+Paulo Rezende
+Kariton Gomes
+André Filipe
 
 Desenvolvido para o programa INDT.
-
-## 📌 Observações
-
-- Certifique-se de que o PostgreSQL está rodando antes de iniciar a aplicação
-- As tabelas são sincronizadas automaticamente pelo TypeORM
