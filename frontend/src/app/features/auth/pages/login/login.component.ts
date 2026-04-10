@@ -55,9 +55,10 @@ import { AuthService } from '../../../../core/services/auth.service';
         </form>
 
         <div class="login-hint">
-          <strong>Usuários seed:</strong><br />
+          <strong>Usuários de teste:</strong><br />
           operador@lotepath.com / 123456<br />
-          inspetor@lotepath.com / 123456
+          inspetor@lotepath.com / 123456<br />
+          gestor@lotepath.com / 123456
         </div>
       </div>
     </div>
