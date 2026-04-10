@@ -37,6 +37,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'lotes',
+        loadComponent: () =>
+          import('./features/lotes/pages/lotes/lotes.component').then(
+            (m) => m.LotesComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

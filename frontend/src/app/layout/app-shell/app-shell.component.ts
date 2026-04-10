@@ -38,6 +38,14 @@ import { AuthService } from '../../core/services/auth.service';
           >
             Produtos
           </a>
+
+          <a
+            routerLink="/app/lotes"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Lotes
+          </a>
         </nav>
 
         <div class="topbar-actions">
