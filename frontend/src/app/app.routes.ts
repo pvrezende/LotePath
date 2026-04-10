@@ -30,6 +30,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'produtos',
+        loadComponent: () =>
+          import('./features/produtos/pages/produtos/produtos.component').then(
+            (m) => m.ProdutosComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

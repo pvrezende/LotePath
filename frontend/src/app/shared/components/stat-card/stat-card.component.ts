@@ -1,78 +1,53 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { LoteStatus } from '../../../features/dashboard/models/dashboard.model';
 
 @Component({
-  selector: 'app-status-badge',
+  selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule],
   template: `
-    <span class="badge" [ngClass]="status">
-      <span class="dot"></span>
-      {{ label }}
-    </span>
+    <article class="card">
+      <div class="card-header">
+        <p class="label">{{ label }}</p>
+      </div>
+      <h3 class="value">{{ value }}</h3>
+    </article>
   `,
   styles: [
     `
-      .badge {
-        display: inline-flex;
+      .card {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e5e7eb;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card-header {
+        display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-width: 150px;
-        padding: 9px 14px;
-        border-radius: 999px;
-        font-size: 12px;
+        justify-content: space-between;
+      }
+
+      .label {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .value {
+        font-size: 34px;
         font-weight: 800;
-        text-transform: capitalize;
-      }
-
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: currentColor;
-      }
-
-      .em_producao {
-        background: #dbeafe;
-        color: #1d4ed8;
-      }
-
-      .aguardando_inspecao {
-        background: #fef3c7;
-        color: #b45309;
-      }
-
-      .aprovado {
-        background: #dcfce7;
-        color: #15803d;
-      }
-
-      .aprovado_restricao {
-        background: #ffedd5;
-        color: #c2410c;
-      }
-
-      .reprovado {
-        background: #fee2e2;
-        color: #b91c1c;
+        color: #0f172a;
+        line-height: 1;
       }
     `,
   ],
 })
-export class StatusBadgeComponent {
-  @Input({ required: true }) status!: LoteStatus;
-
-  get label(): string {
-    const labels: Record<LoteStatus, string> = {
-      em_producao: 'Em produção',
-      aguardando_inspecao: 'Aguardando inspeção',
-      aprovado: 'Aprovado',
-      aprovado_restricao: 'Aprovado com restrição',
-      reprovado: 'Reprovado',
-    };
-
-    return labels[this.status];
-  }
+export class StatCardComponent {
+  @Input({ required: true }) label!: string;
+  @Input({ required: true }) value!: string | number;
 }

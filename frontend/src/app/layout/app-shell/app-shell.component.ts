@@ -1,5 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import {
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -24,6 +29,14 @@ import { AuthService } from '../../core/services/auth.service';
             [routerLinkActiveOptions]="{ exact: true }"
           >
             Dashboard
+          </a>
+
+          <a
+            routerLink="/app/produtos"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Produtos
           </a>
         </nav>
 
@@ -172,6 +185,7 @@ import { AuthService } from '../../core/services/auth.service';
 
         .nav-menu {
           width: 100%;
+          flex-wrap: wrap;
         }
 
         .topbar-actions {
