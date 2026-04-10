@@ -30,6 +30,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'produtos',
+        loadComponent: () =>
+          import('./features/produtos/pages/produtos/produtos.component').then(
+            (m) => m.ProdutosComponent
+          ),
+      },
+      {
+        path: 'lotes',
+        loadComponent: () =>
+          import('./features/lotes/pages/lotes/lotes.component').then(
+            (m) => m.LotesComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

@@ -8,6 +8,7 @@ import { LoteStatus } from '../../../features/dashboard/models/dashboard.model';
   imports: [CommonModule],
   template: `
     <span class="badge" [ngClass]="status">
+      <span class="dot"></span>
       {{ label }}
     </span>
   `,
@@ -17,12 +18,20 @@ import { LoteStatus } from '../../../features/dashboard/models/dashboard.model';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 140px;
-        padding: 8px 12px;
+        gap: 8px;
+        min-width: 150px;
+        padding: 9px 14px;
         border-radius: 999px;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: capitalize;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: currentColor;
       }
 
       .em_producao {

@@ -61,6 +61,12 @@ async function seed() {
             email: "inspetor@lotepath.com",
             senha: senhaHash,
             perfil: Perfil.INSPETOR
+        },
+        {
+            nome: "Gestor Teste",
+            email: "gestor@lotepath.com",
+            senha: senhaHash,
+            perfil: Perfil.GESTOR
         }
     ]);
 
@@ -142,6 +148,7 @@ async function seed() {
     console.log("Usuários criados:");
     console.log("operador@lotepath.com / 123456");
     console.log("inspetor@lotepath.com / 123456");
+    console.log("gestor@lotepath.com / 123456");
 
     await AppDataSource.destroy();
 }
