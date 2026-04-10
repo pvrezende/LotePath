@@ -109,7 +109,34 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <p>Carregando lotes...</p>
             </div>
           } @else if (lotes.length > 0) {
-            <div class="table-wrapper">
+            <div class="mobile-lote-list">
+              @for (lote of lotes; track lote.id) {
+                <article class="mobile-lote-card">
+                  <div class="mobile-lote-top">
+                    <strong>{{ lote.numero_lote }}</strong>
+                    <app-status-badge [status]="lote.status" />
+                  </div>
+
+                  <div class="mobile-lote-info">
+                    <span><b>Produto:</b> {{ lote.produto.nome }}</span>
+                    <span><b>Turno:</b> {{ formatTurno(lote.turno) }}</span>
+                    <span><b>Quantidade:</b> {{ lote.quantidade_prod }}</span>
+                  </div>
+
+                  <div class="mobile-lote-actions">
+                    <button
+                      type="button"
+                      class="details-btn"
+                      (click)="openDetails(lote)"
+                    >
+                      Detalhes
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+
+            <div class="table-wrapper desktop-table">
               <table>
                 <thead>
                   <tr>
@@ -257,10 +284,12 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-size: 32px;
         margin-bottom: 8px;
         color: #0f172a;
+        line-height: 1.1;
       }
 
       .page-header p {
         color: #64748b;
+        max-width: 720px;
       }
 
       .content-grid {
@@ -372,6 +401,14 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         overflow-x: auto;
       }
 
+      .desktop-table {
+        display: block;
+      }
+
+      .mobile-lote-list {
+        display: none;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -394,6 +431,40 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-weight: 800;
       }
 
+      .mobile-lote-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mobile-lote-list {
+        gap: 12px;
+        flex-direction: column;
+      }
+
+      .mobile-lote-top {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .mobile-lote-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: #334155;
+        font-size: 14px;
+      }
+
+      .mobile-lote-actions {
+        display: flex;
+        justify-content: flex-start;
+      }
+
       .modal-backdrop {
         position: fixed;
         inset: 0;
@@ -408,6 +479,8 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
       .modal-card {
         width: 100%;
         max-width: 840px;
+        max-height: 90vh;
+        overflow-y: auto;
         background: #ffffff;
         border-radius: 20px;
         padding: 24px;
@@ -483,7 +556,30 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         }
       }
 
-      @media (max-width: 720px) {
+      @media (max-width: 768px) {
+        .page-header h2 {
+          font-size: 26px;
+        }
+
+        .form-card,
+        .list-card {
+          padding: 18px;
+          border-radius: 18px;
+        }
+
+        .list-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .desktop-table {
+          display: none;
+        }
+
+        .mobile-lote-list {
+          display: flex;
+        }
+
         .modal-grid {
           grid-template-columns: 1fr;
         }
@@ -491,6 +587,35 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         .modal-header {
           flex-direction: column;
           align-items: stretch;
+        }
+
+        .modal-card {
+          padding: 18px;
+          border-radius: 18px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .page-header h2 {
+          font-size: 22px;
+        }
+
+        .page-header p {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        .form-card,
+        .list-card {
+          padding: 16px;
+        }
+
+        .modal-backdrop {
+          padding: 12px;
+        }
+
+        .modal-header h3 {
+          font-size: 22px;
         }
       }
     `,

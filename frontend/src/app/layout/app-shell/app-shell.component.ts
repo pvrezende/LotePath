@@ -15,10 +15,21 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand-area">
-          <div class="brand-text">
-            <h1>LotePath</h1>
-            <p>Sistema de rastreamento por lotes</p>
+        <div class="topbar-main">
+          <div class="brand-area">
+            <div class="brand-text">
+              <h1>LotePath</h1>
+              <p>Sistema de rastreamento por lotes</p>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="user-info">
+              <strong>{{ userName }}</strong>
+              <span>{{ userPerfil }}</span>
+            </div>
+
+            <button type="button" (click)="logout()">Sair</button>
           </div>
         </div>
 
@@ -47,15 +58,6 @@ import { AuthService } from '../../core/services/auth.service';
             Lotes
           </a>
         </nav>
-
-        <div class="topbar-actions">
-          <div class="user-info">
-            <strong>{{ userName }}</strong>
-            <span>{{ userPerfil }}</span>
-          </div>
-
-          <button type="button" (click)="logout()">Sair</button>
-        </div>
       </header>
 
       <main class="content">
@@ -77,10 +79,9 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       .topbar {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        align-items: center;
-        gap: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
         padding: 18px 24px;
         background: #ffffff;
         border-bottom: 1px solid #e5e7eb;
@@ -89,26 +90,37 @@ import { AuthService } from '../../core/services/auth.service';
         z-index: 10;
       }
 
+      .topbar-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
       .brand-area {
         display: flex;
         align-items: center;
+        min-width: 0;
       }
 
       .brand-text h1 {
         font-size: 30px;
         margin-bottom: 4px;
         color: #0f172a;
+        line-height: 1.1;
       }
 
       .brand-text p {
         color: #64748b;
         font-size: 14px;
+        line-height: 1.4;
       }
 
       .nav-menu {
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
       .nav-menu a {
@@ -117,6 +129,7 @@ import { AuthService } from '../../core/services/auth.service';
         color: #475569;
         font-weight: 600;
         transition: 0.2s ease;
+        white-space: nowrap;
       }
 
       .nav-menu a:hover {
@@ -133,6 +146,7 @@ import { AuthService } from '../../core/services/auth.service';
         display: flex;
         align-items: center;
         gap: 16px;
+        flex-shrink: 0;
       }
 
       .user-info {
@@ -162,6 +176,7 @@ import { AuthService } from '../../core/services/auth.service';
         font-weight: 700;
         cursor: pointer;
         transition: 0.2s ease;
+        white-space: nowrap;
       }
 
       button:hover {
@@ -185,15 +200,10 @@ import { AuthService } from '../../core/services/auth.service';
         font-size: 14px;
       }
 
-      @media (max-width: 960px) {
-        .topbar {
-          grid-template-columns: 1fr;
-          justify-items: start;
-        }
-
-        .nav-menu {
-          width: 100%;
-          flex-wrap: wrap;
+      @media (max-width: 900px) {
+        .topbar-main {
+          align-items: flex-start;
+          flex-direction: column;
         }
 
         .topbar-actions {
@@ -207,16 +217,82 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       @media (max-width: 640px) {
-        .content {
-          padding: 20px 16px;
-        }
-
         .topbar {
           padding: 16px;
+          gap: 12px;
+        }
+
+        .brand-text h1 {
+          font-size: 24px;
+        }
+
+        .brand-text p {
+          font-size: 13px;
+        }
+
+        .nav-menu {
+          gap: 8px;
+        }
+
+        .nav-menu a {
+          padding: 9px 12px;
+          font-size: 14px;
+        }
+
+        .topbar-actions {
+          gap: 12px;
+        }
+
+        .user-info strong {
+          font-size: 14px;
+        }
+
+        .user-info span {
+          font-size: 12px;
+        }
+
+        button {
+          height: 40px;
+          padding: 0 14px;
+          font-size: 14px;
+        }
+
+        .content {
+          padding: 18px 14px;
         }
 
         .footer {
           padding: 14px 16px;
+          font-size: 13px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .nav-menu {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: 100%;
+        }
+
+        .nav-menu a {
+          text-align: center;
+        }
+
+        .topbar-actions {
+          flex-direction: row;
+          align-items: center;
+        }
+
+        .user-info {
+          min-width: 0;
+        }
+
+        .user-info strong,
+        .user-info span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 180px;
         }
       }
     `,
