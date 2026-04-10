@@ -118,6 +118,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                     <th>Turno</th>
                     <th>Quantidade</th>
                     <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -129,6 +130,15 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                       <td>{{ lote.quantidade_prod }}</td>
                       <td>
                         <app-status-badge [status]="lote.status" />
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="details-btn"
+                          (click)="openDetails(lote)"
+                        >
+                          Detalhes
+                        </button>
                       </td>
                     </tr>
                   }
@@ -143,6 +153,87 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
           }
         </section>
       </div>
+
+      @if (selectedLote) {
+        <div class="modal-backdrop" (click)="closeDetails()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div>
+                <span class="modal-eyebrow">DETALHES DO LOTE</span>
+                <h3>{{ selectedLote.numero_lote }}</h3>
+              </div>
+
+              <button
+                type="button"
+                class="close-btn"
+                (click)="closeDetails()"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div class="modal-grid">
+              <div class="info-item">
+                <span class="info-label">Produto</span>
+                <strong>{{ selectedLote.produto.nome }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Código do produto</span>
+                <strong>{{ selectedLote.produto.codigo }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Operador</span>
+                <strong>{{ selectedLote.operador.nome }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Data de produção</span>
+                <strong>{{ formatDate(selectedLote.data_producao) }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Turno</span>
+                <strong>{{ formatTurno(selectedLote.turno) }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Status</span>
+                <app-status-badge [status]="selectedLote.status" />
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Quantidade produzida</span>
+                <strong>{{ selectedLote.quantidade_prod }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span class="info-label">Quantidade reprovada</span>
+                <strong>{{ selectedLote.quantidade_repr }}</strong>
+              </div>
+
+              <div class="info-item full-width">
+                <span class="info-label">Observações</span>
+                <p class="info-text">
+                  {{ selectedLote.observacoes || 'Nenhuma observação informada.' }}
+                </p>
+              </div>
+
+              <div class="info-item full-width">
+                <span class="info-label">Encerrado em</span>
+                <p class="info-text">
+                  {{
+                    selectedLote.encerrado_em
+                      ? formatDateTime(selectedLote.encerrado_em)
+                      : 'Lote ainda não encerrado.'
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </section>
   `,
   styles: [
@@ -254,6 +345,14 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         color: #0f172a;
       }
 
+      .details-btn {
+        background: #e0f2fe;
+        color: #0369a1;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
       .list-header {
         display: flex;
         align-items: center;
@@ -283,6 +382,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         text-align: left;
         padding: 14px 12px;
         border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
       }
 
       th {
@@ -294,9 +394,103 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-weight: 800;
       }
 
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 30;
+      }
+
+      .modal-card {
+        width: 100%;
+        max-width: 840px;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .modal-eyebrow {
+        display: inline-block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #2563eb;
+      }
+
+      .modal-header h3 {
+        font-size: 28px;
+        color: #0f172a;
+      }
+
+      .close-btn {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .info-item {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .info-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+
+      .info-item strong {
+        color: #0f172a;
+      }
+
+      .info-text {
+        color: #334155;
+        line-height: 1.6;
+      }
+
       @media (max-width: 1100px) {
         .content-grid {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .modal-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .modal-header {
+          flex-direction: column;
+          align-items: stretch;
         }
       }
     `,
@@ -310,6 +504,7 @@ export class LotesComponent implements OnInit {
 
   produtos: Produto[] = [];
   lotes: Lote[] = [];
+  selectedLote: Lote | null = null;
   loading = true;
   saving = false;
   errorMessage = '';
@@ -354,6 +549,14 @@ export class LotesComponent implements OnInit {
     });
   }
 
+  openDetails(lote: Lote): void {
+    this.selectedLote = lote;
+  }
+
+  closeDetails(): void {
+    this.selectedLote = null;
+  }
+
   formatTurno(turno: string): string {
     const labels: Record<string, string> = {
       manha: 'Manhã',
@@ -362,6 +565,14 @@ export class LotesComponent implements OnInit {
     };
 
     return labels[turno] ?? turno;
+  }
+
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('pt-BR');
+  }
+
+  formatDateTime(date: string): string {
+    return new Date(date).toLocaleString('pt-BR');
   }
 
   onSubmit(): void {
