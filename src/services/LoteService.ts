@@ -120,4 +120,43 @@ export class LoteService {
 
         return lote;
     }
+
+    async getAllWithFilters(
+        filters: {
+          produto_id?: string;
+          status?: string;
+          data_inicio?: string;
+          data_fim?: string;
+        },
+        page: number = 1,
+        limit: number = 20
+    ) {
+        const query = this.loteRepo
+          .createQueryBuilder("lote")
+          .leftJoinAndSelect("lote.produto", "produto")
+          .leftJoinAndSelect("lote.operador", "operador")
+          .leftJoinAndSelect("lote.inspecao", "inspecao");
+
+        if (filters.produto_id) {
+          query.andWhere("lote.produto_id = :produto_id", { produto_id: filters.produto_id });
+        }
+        if (filters.status) {
+          query.andWhere("lote.status = :status", { status: filters.status });
+        }
+        if (filters.data_inicio) {
+          query.andWhere("lote.data_producao >= :data_inicio", { data_inicio: filters.data_inicio });
+        }
+        if (filters.data_fim) {
+          query.andWhere("lote.data_producao <= :data_fim", { data_fim: filters.data_fim });
+        }
+    
+        const [lotes, total] = await query
+          .orderBy("lote.data_producao", "DESC")
+          .addOrderBy("lote.aberto_em", "DESC")
+          .skip((page - 1) * limit)
+          .take(limit)
+          .getManyAndCount();
+    
+        return { lotes, total, page, limit };
+  }
 }
