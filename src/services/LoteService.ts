@@ -121,6 +121,14 @@ export class LoteService {
         return lote;
     }
 
+    private static readonly VALID_STATUS = [
+        "em_producao",
+        "aguardando_inspecao",
+        "aprovado",
+        "aprovado_restricao",
+        "reprovado",
+    ] as const;
+
     async getAllWithFilters(
         filters: {
           produto_id?: string;
@@ -131,6 +139,13 @@ export class LoteService {
         page: number = 1,
         limit: number = 20
     ) {
+        if (filters.status && !(LoteService.VALID_STATUS as readonly string[]).includes(filters.status)) {
+            throw new AppError(
+                `Status inválido. Valores permitidos: ${LoteService.VALID_STATUS.join(", ")}`,
+                400
+            );
+        }
+
         const query = this.loteRepo
           .createQueryBuilder("lote")
           .leftJoinAndSelect("lote.produto", "produto")
