@@ -3,22 +3,15 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 export class AddPerformanceIndexes1712000000000 implements MigrationInterface {
     name = 'AddPerformanceIndexes1712000000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // Índices para Lote (Dashboard + Filtros RF08)
-        // Tabela: lotes (conforme mapping da entity Lote)
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_lote_data_status" ON "lotes" ("data_producao", "status")`);
-        await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_lote_numero" ON "lotes" ("numero_lote")`);
-        
-        // Índices para Insumo_lote (Rastreabilidade Reversa RF11)
-        // Tabela: insumo_lote (singular com underscore, conforme entity Insumo_lote.ts)
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_insumo_codigo" ON "insumo_lote" ("codigo_insumo", "lote_insumo")`);
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_insumo_lote_id" ON "insumo_lote" ("lote_id")`);
+    public async up(_queryRunner: QueryRunner): Promise<void> {
+        // No-op:
+        // O projeto atual utiliza synchronize e não registra/executa migrations
+        // de forma consistente. Para evitar divergência/duplicidade de schema,
+        // os índices devem ser mantidos fora desta migration enquanto essa
+        // estratégia de configuração permanecer.
     }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_lote_data_status"`);
-        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_lote_numero"`);
-        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_insumo_codigo"`);
-        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_insumo_lote_id"`);
+    public async down(_queryRunner: QueryRunner): Promise<void> {
+        // No-op pelo mesmo motivo do método up().
     }
 }
