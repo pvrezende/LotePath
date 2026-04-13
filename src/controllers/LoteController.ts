@@ -23,13 +23,6 @@ export class LoteController {
             const page = Number(pageRaw);
             const limit = Number(limitRaw);
 
-            if (!Number.isInteger(page) || page < 1) {
-                return res.status(400).json({ error: "Parâmetro 'page' deve ser um inteiro maior ou igual a 1" });
-            }
-            if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
-                return res.status(400).json({ error: "Parâmetro 'limit' deve ser um inteiro entre 1 e 100" });
-            }
-
             const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (produto_id && !UUID_REGEX.test(produto_id as string)) {
                 return res.status(400).json({ error: "Parâmetro 'produto_id' deve ser um UUID válido" });
