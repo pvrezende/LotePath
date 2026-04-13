@@ -23,11 +23,6 @@ export class LoteController {
             const page = Number(pageRaw);
             const limit = Number(limitRaw);
 
-            const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (produto_id && !UUID_REGEX.test(produto_id as string)) {
-                return res.status(400).json({ error: "Parâmetro 'produto_id' deve ser um UUID válido" });
-            }
-
             const result = await this.loteService.getAllWithFilters(
                 {
                     produto_id: produto_id as string,

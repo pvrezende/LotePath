@@ -147,6 +147,11 @@ export class LoteService {
         page: number = 1,
         limit: number = 20
     ) {
+        const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (filters.produto_id && !UUID_REGEX.test(filters.produto_id)) {
+            throw new AppError("Parâmetro 'produto_id' deve ser um UUID válido", 400);
+        }
+
         if (!Number.isInteger(page) || page < 1) {
             throw new AppError("Parâmetro 'page' deve ser um inteiro maior ou igual a 1", 400);
         }
