@@ -39,7 +39,7 @@ export class DashboardService {
         });
 
         const lotesAprovadosMes = lotesMesInspecionados.filter(
-            (lote) => lote.status === "aprovado"
+            (lote) => lote.status === "aprovado" || lote.status === "aprovado_restricao"
         ).length;
 
         const taxaAprovacaoMes =
