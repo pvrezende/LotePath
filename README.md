@@ -109,6 +109,8 @@ npm run seed
 npm run dev
 ```
 
+> ℹ️ **Schema automático:** O projeto usa `synchronize: true` no TypeORM. O banco de dados é criado/atualizado automaticamente ao iniciar o servidor — não é necessário executar migrations manualmente.
+
 📍 Backend: [http://localhost:5336](http://localhost:5336)
 
 ---

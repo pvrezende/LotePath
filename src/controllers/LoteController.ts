@@ -16,9 +16,19 @@ export class LoteController {
                 status,
                 data_inicio,
                 data_fim,
-                page = '1',
-                limit = '20'
+                page: pageRaw = '1',
+                limit: limitRaw = '20'
             } = req.query;
+
+            const page = Number(pageRaw);
+            const limit = Number(limitRaw);
+
+            if (!Number.isInteger(page) || page < 1) {
+                return res.status(400).json({ error: "Parâmetro 'page' deve ser um inteiro maior ou igual a 1" });
+            }
+            if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+                return res.status(400).json({ error: "Parâmetro 'limit' deve ser um inteiro entre 1 e 100" });
+            }
 
             const result = await this.loteService.getAllWithFilters(
                 {
@@ -27,8 +37,8 @@ export class LoteController {
                     data_inicio: data_inicio as string,
                     data_fim: data_fim as string
                 },
-                Number(page),
-                Number(limit)
+                page,
+                limit
             );
 
             return res.status(200).json({

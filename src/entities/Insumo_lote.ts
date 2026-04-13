@@ -2,7 +2,6 @@ import {
     Column,
     Entity,
     Index, // ✅ Importação adicionada
-    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
@@ -18,7 +17,6 @@ export class InsumoLote {
     id!: string;
 
     @ManyToOne(() => Lote, (lote) => lote.insumos, { onDelete: "CASCADE", nullable: false })
-    @JoinColumn({ name: "lote_id" }) // ✅ Garante que a coluna no banco se chame lote_id
     lote!: Lote;
 
     @Column({ type: "varchar", nullable: false })
