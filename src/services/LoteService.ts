@@ -138,7 +138,7 @@ export class LoteService {
           .leftJoinAndSelect("lote.inspecao", "inspecao");
 
         if (filters.produto_id) {
-          query.andWhere("lote.produto_id = :produto_id", { produto_id: filters.produto_id });
+          query.andWhere("produto.id = :produto_id", { produto_id: filters.produto_id });
         }
         if (filters.status) {
           query.andWhere("lote.status = :status", { status: filters.status });
