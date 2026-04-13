@@ -59,7 +59,6 @@ flowchart LR
 
 * Angular 21
 * TypeScript
-* Tailwind CSS
 
 ---
 
