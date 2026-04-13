@@ -12,7 +12,7 @@ import { Lote } from "./Lote.js";
 // ✅ Índice composto para busca reversa (RF11): "Quais lotes usaram este insumo?"
 @Index(["codigo_insumo", "lote_insumo"])
 // ✅ Índice para a chave estrangeira: Listar insumos de um lote específico
-@Index(["lote_id"]) 
+@Index(["lote"])
 export class InsumoLote {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
