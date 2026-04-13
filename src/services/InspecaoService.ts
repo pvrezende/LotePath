@@ -39,8 +39,8 @@ export class InspecaoService {
         }
 
         // ✅ VALIDAÇÃO RF06: descricao_desvio obrigatório para resultados não aprovados
-        if (data.resultado !== 'aprovado' && (!data.descricao_desvio || data.descricao_desvio.trim() === '')) {
-            throw new AppError("Descrição do desvio é obrigatória quando o resultado não é 'aprovado'", 400);
+        if (data.resultado !== "aprovado" && (!data.descricao_desvio || data.descricao_desvio.trim() === "")) {
+            throw new AppError("Descrição do desvio é obrigatória quando o resultado não é \"aprovado\"", 400);
         }
 
         const inspecao = this.inspecaoRepo.create({
