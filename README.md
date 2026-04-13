@@ -152,8 +152,10 @@ ng serve
 
 **Exemplo:**
 
-```json
+```http
 POST /auth/login
+Content-Type: application/json
+
 {
   "email": "operador@lotepath.com",
   "senha": "123456"
