@@ -14,7 +14,6 @@ import { InspecaoLote } from "./Inspecao_lote.js";
 
 @Entity("lotes")
 @Index(["data_producao", "status"]) // ✅ Otimiza Dashboard + Filtros RF08
-@Index(["numero_lote"], { unique: true }) // ✅ Garante unicidade + busca rápida
 export class Lote {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
