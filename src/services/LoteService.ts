@@ -129,6 +129,12 @@ export class LoteService {
         "reprovado",
     ] as const;
 
+    private static isValidDate(value: string): boolean {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const d = new Date(value);
+        return !Number.isNaN(d.getTime());
+    }
+
     async getAllWithFilters(
         filters: {
           produto_id?: string;
@@ -139,11 +145,25 @@ export class LoteService {
         page: number = 1,
         limit: number = 20
     ) {
+        if (!Number.isInteger(page) || page < 1) {
+            throw new AppError("Parâmetro 'page' deve ser um inteiro maior ou igual a 1", 400);
+        }
+        if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+            throw new AppError("Parâmetro 'limit' deve ser um inteiro entre 1 e 100", 400);
+        }
+
         if (filters.status && !(LoteService.VALID_STATUS as readonly string[]).includes(filters.status)) {
             throw new AppError(
                 `Status inválido. Valores permitidos: ${LoteService.VALID_STATUS.join(", ")}`,
                 400
             );
+        }
+
+        if (filters.data_inicio && !LoteService.isValidDate(filters.data_inicio)) {
+            throw new AppError("Parâmetro 'data_inicio' deve estar no formato YYYY-MM-DD", 400);
+        }
+        if (filters.data_fim && !LoteService.isValidDate(filters.data_fim)) {
+            throw new AppError("Parâmetro 'data_fim' deve estar no formato YYYY-MM-DD", 400);
         }
 
         const query = this.loteRepo

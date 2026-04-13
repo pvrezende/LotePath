@@ -66,16 +66,17 @@ flowchart LR
 
 ```bash
 LotePath/
-├── backend/
 ├── frontend/
 ├── src/
 │   ├── controllers/
 │   ├── database/
 │   ├── dtos/
 │   ├── entities/
+│   ├── errors/
 │   ├── middlewares/
 │   ├── routes/
 │   ├── services/
+│   ├── types/
 │   └── server.ts
 ├── package.json
 └── .env.example
