@@ -8,21 +8,28 @@ export class DashboardService {
         this.loteRepo = appDataSource.getRepository(Lote);
     }
 
+    private static toLocalDateString(date: Date): string {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
     async getDashboard() {
         const hoje = new Date();
-        const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
-            .toISOString()
-            .split("T")[0];
-        const fimHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1)
-            .toISOString()
-            .split("T")[0];
+        const inicioHoje = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+        );
+        const fimHoje = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1)
+        );
 
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-            .toISOString()
-            .split("T")[0];
-        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
-            .toISOString()
-            .split("T")[0];
+        const inicioMes = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+        );
+        const fimMes = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+        );
 
         // Lotes produzidos hoje (COUNT)
         const lotesProduzidosHoje = await this.loteRepo
@@ -38,7 +45,7 @@ export class DashboardService {
             .where("lote.data_producao >= :inicioHoje", { inicioHoje })
             .andWhere("lote.data_producao < :fimHoje", { fimHoje })
             .getRawOne<{ total: string }>();
-        const unidadesProduzidasHoje = Number(unidadesResult?.total ?? 0);
+        const unidadesProduzidasHoje = parseInt(unidadesResult?.total ?? "0", 10) || 0;
 
         // Lotes inspecionados no mês (COUNT)
         const totalInspecionadosMes = await this.loteRepo
