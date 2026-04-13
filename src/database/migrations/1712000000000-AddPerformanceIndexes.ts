@@ -5,9 +5,9 @@ export class AddPerformanceIndexes1712000000000 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Índices para Lote (Dashboard + Filtros RF08)
-        // Tabela: lote (singular, conforme entity Lote.ts)
-        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_lote_data_status" ON "lote" ("data_producao", "status")`);
-        await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_lote_numero" ON "lote" ("numero_lote")`);
+        // Tabela: lotes (conforme mapping da entity Lote)
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_lote_data_status" ON "lotes" ("data_producao", "status")`);
+        await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_lote_numero" ON "lotes" ("numero_lote")`);
         
         // Índices para Insumo_lote (Rastreabilidade Reversa RF11)
         // Tabela: insumo_lote (singular com underscore, conforme entity Insumo_lote.ts)
