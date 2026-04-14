@@ -188,8 +188,10 @@ Content-Type: application/json
 **Filtros disponíveis:**
 
 ```
-/lotes?produto_id=&status=&data_inicio=&data_fim=
+/lotes?produto_id=&status=&data_inicio=&data_fim=&page=1&limit=20
 ```
+
+> `page` (padrão: `1`) e `limit` (padrão: `20`, máx: `100`) controlam a paginação. A resposta inclui um objeto `pagination` com `page`, `limit`, `total` e `pages`.
 
 ---
 
