@@ -1,82 +1,73 @@
-# LotePath
+---
 
-Sistema web de rastreamento de produção por lotes, desenvolvido para o programa **INDT**, com foco em controle produtivo, inspeção de qualidade, rastreabilidade e apoio a cenários de recall.
+# 🚀 LotePath
 
-## Visão geral
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![Node](https://img.shields.io/badge/node-22-green)
+![Angular](https://img.shields.io/badge/angular-21-red)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-O LotePath foi criado para digitalizar o processo de rastreamento de lotes de produção, permitindo registrar:
+Sistema web de **rastreabilidade de produção por lotes**, desenvolvido para o programa **INDT**, com foco em controle produtivo, inspeção de qualidade, rastreabilidade e suporte a cenários de **recall industrial**.
 
-- abertura de lotes
-- vínculo de insumos por lote
-- inspeção de qualidade
-- rastreabilidade por lote e por insumo
-- dashboard com indicadores operacionais
+---
 
-O objetivo do projeto é facilitar a identificação de lotes afetados em caso de falha de insumo, não conformidade ou recall, reduzindo tempo de análise e melhorando a visibilidade do processo produtivo.
+## 📌 Visão Geral
 
-## Problema que o projeto resolve
+O **LotePath** digitaliza e centraliza o controle de produção, permitindo:
 
-Em ambientes industriais, a rastreabilidade de produção é essencial para responder perguntas como:
+* 📦 Abertura automatizada de lotes
+* 🔗 Vínculo de insumos por lote
+* 🔍 Inspeção de qualidade com controle de desvios
+* 🔁 Rastreabilidade direta e reversa
+* 📊 Dashboard com indicadores operacionais
 
-- qual lote foi produzido em determinada data
-- quais insumos foram usados nesse lote
-- quem foi o operador responsável
-- quais lotes podem ter sido afetados por um insumo suspeito
+> 🎯 Objetivo: reduzir o tempo de análise em auditorias e recalls, aumentando a confiabilidade e visibilidade do processo produtivo.
 
-Sem um sistema centralizado, esse processo costuma depender de papel, planilhas ou consultas manuais, tornando recalls e auditorias mais lentos e arriscados. O LotePath organiza essas informações em uma aplicação web com backend e frontend integrados. :contentReference[oaicite:0]{index=0}
+---
 
-## Funcionalidades implementadas
+## ❗ Problema Resolvido
 
-### Backend
-- autenticação com JWT
-- controle de acesso por perfil
-- CRUD de produtos
-- abertura de lotes com número automático
-- atualização de status do lote
-- vínculo de insumos por lote
-- registro de inspeção
-- rastreabilidade por lote
-- rastreabilidade por insumo
-- endpoint de dashboard com indicadores e últimos lotes
+Ambientes industriais frequentemente sofrem com:
 
-### Frontend
-- login com integração real ao backend
-- armazenamento de token e sessão
-- rotas protegidas com guard
-- interceptor para envio automático do token
-- logout
-- dashboard com:
-  - indicadores
-  - últimos lotes
-  - badges de status
-  - loading
-  - tratamento de erro
-  - empty state
-- layout com navbar e footer
+* Controle manual (planilhas/papel)
+* Baixa rastreabilidade
+* Alto tempo de resposta em recalls
+* Risco operacional elevado
 
-## Stack utilizada
+O LotePath resolve isso com uma **arquitetura web integrada (backend + frontend)** e modelo de dados orientado à rastreabilidade.
 
-### Frontend
-- Angular
-- TypeScript
-- CSS
+---
 
-### Backend
-- Node.js
-- Express
-- TypeScript
-- TypeORM
-- PostgreSQL
-- JWT
-- Zod
+## 🏗️ Arquitetura
 
-## Estrutura do projeto
+```mermaid
+flowchart LR
+    A[Frontend Angular] -->|HTTP + JWT| B[Backend Node.js]
+    B --> C[(PostgreSQL)]
+```
 
-```text
+### 🔧 Backend
+
+* Node.js + Express
+* TypeScript
+* TypeORM
+* PostgreSQL
+* JWT (autenticação)
+* Zod (validação)
+
+### 🎨 Frontend
+
+* Angular 21
+* TypeScript
+
+---
+
+## 📁 Estrutura do Projeto
+
+```bash
 LotePath/
-├── backend/                  # pasta auxiliar enviada no projeto
-├── frontend/                 # aplicação Angular
-├── src/                      # backend principal
+├── frontend/
+├── src/
 │   ├── controllers/
 │   ├── database/
 │   ├── dtos/
@@ -88,19 +79,23 @@ LotePath/
 │   ├── types/
 │   └── server.ts
 ├── package.json
-└── README.md
+└── .env.example
+```
 
------------------------------------------------------
-Como executar o backend
-1. Instale as dependências
+---
+
+## ⚙️ Como Executar
+
+### 🔹 Backend
+
+```bash
 npm install
------------------------------------------------------
-2. Configure o arquivo .env
+cp .env.example .env
+```
 
-Use o .env.example como base e crie um arquivo .env na raiz.
+Configure o `.env`:
 
-Exemplo:
-
+```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
@@ -108,91 +103,247 @@ DB_PASS=sua_senha
 DB_NAME=indt_lotepath
 PORT=5336
 JWT_SECRET=sua_chave_jwt
------------------------------------------------------
-3. Crie o banco PostgreSQL
-CREATE DATABASE indt_lotepath;
------------------------------------------------------
-4. Rode o seed
+```
+
+```bash
 npm run seed
------------------------------------------------------
-5. Inicie o backend
 npm run dev
------------------------------------------------------
-Backend disponível em:
-http://localhost:5336
------------------------------------------------------
-#####################################################
------------------------------------------------------
+```
 
-Como executar o frontend
-1. Entre na pasta do frontend
+> ℹ️ **Schema automático:** O projeto usa `synchronize: true` no TypeORM. O banco de dados é criado/atualizado automaticamente ao iniciar o servidor — não é necessário executar migrations manualmente.
+
+📍 Backend: [http://localhost:5336](http://localhost:5336)
+
+---
+
+### 🔹 Frontend
+
+```bash
 cd frontend
------------------------------------------------------
-2. Instale as dependências
 npm install
------------------------------------------------------
-3. Inicie o frontend
 ng serve
-Frontend disponível em:
-http://localhost:4200
------------------------------------------------------
+```
 
-Credenciais de teste
+📍 Frontend: [http://localhost:4200](http://localhost:4200)
 
-Criadas pelo seed do backend:
+---
 
-Operador
-E-mail: operador@lotepath.com
-Senha: 123456
-Inspetor
-E-mail: inspetor@lotepath.com
-Senha: 123456
-Rotas principais da API
-Autenticação
+## 🔐 Credenciais de Teste
+
+| Perfil   | Email                                                 | Senha  |
+| -------- | ----------------------------------------------------- | ------ |
+| Operador | [operador@lotepath.com](mailto:operador@lotepath.com) | 123456 |
+| Inspetor | [inspetor@lotepath.com](mailto:inspetor@lotepath.com) | 123456 |
+
+---
+
+# 🔌 API — Rotas Principais
+
+> 🔐 Todas as rotas (exceto login) exigem **JWT no header**:
+> `Authorization: Bearer <token>`
+
+---
+
+## 🔑 Autenticação
+
+| Método | Rota          | Descrição                   |
+| ------ | ------------- | --------------------------- |
+| POST   | `/auth/login` | Realiza login e retorna JWT |
+
+**Exemplo:**
+
+```http
 POST /auth/login
-Produtos
-GET /produtos
-GET /produtos/:id
-POST /produtos
-PUT /produtos/:id
-DELETE /produtos/:id
-Lotes
-GET /lotes
-GET /lotes/:id
-POST /lotes
-PATCH /lotes/:id/status
-Insumos
-POST /lotes/:id/insumos
-DELETE /lotes/:id/insumos/:insumoId
-Inspeção
-POST /lotes/:id/inspecao
-Rastreabilidade
-GET /rastreabilidade/lote/:id
-GET /rastreabilidade/insumo?valor=...
-Dashboard
-GET /dashboard
-Fluxo principal de demonstração
+Content-Type: application/json
 
-Sugestão de apresentação final:
+{
+  "email": "operador@lotepath.com",
+  "senha": "123456"
+}
+```
 
-acessar a tela de login
-autenticar com usuário de teste
-abrir o dashboard
-mostrar indicadores e últimos lotes
-mostrar os status dos lotes
-navegar para o fluxo de rastreabilidade
-demonstrar o cenário de recall com insumo suspeito
+---
 
-O dashboard com 4 indicadores e os últimos 10 lotes faz parte do entregável da Fase 5.
+## 📦 Produtos
 
-Status do projeto
+| Método | Rota            | Descrição             |
+| ------ | --------------- | --------------------- |
+| GET    | `/produtos`     | Lista produtos ativos |
+| GET    | `/produtos/:id` | Detalhe de produto    |
+| POST   | `/produtos`     | Cria produto          |
+| PUT    | `/produtos/:id` | Atualiza produto      |
+| DELETE | `/produtos/:id` | Desativa produto      |
 
-Projeto em evolução, com backend funcional até a Fase 5 e frontend em construção orientada para demonstração final.
+---
 
-Autores
+## 🏭 Lotes
 
-Paulo Rezende
-Kariton Gomes
-André Filipe
+| Método | Rota                | Descrição         |
+| ------ | ------------------- | ----------------- |
+| GET    | `/lotes`            | Lista com filtros |
+| GET    | `/lotes/:id`        | Detalhe do lote   |
+| POST   | `/lotes`            | Cria lote         |
+| PATCH  | `/lotes/:id/status` | Atualiza status   |
 
-Desenvolvido para o programa INDT.
+**Filtros disponíveis:**
+
+```
+/lotes?produto_id=&status=&data_inicio=&data_fim=&page=1&limit=20
+```
+
+> `page` (padrão: `1`) e `limit` (padrão: `20`, máx: `100`) controlam a paginação. A resposta inclui um objeto `pagination` com `page`, `limit`, `total` e `pages`.
+
+---
+
+## 🧪 Insumos (por lote)
+
+| Método | Rota                           | Descrição               |
+| ------ | ------------------------------ | ----------------------- |
+| POST   | `/lotes/:id/insumos`           | Adiciona insumo ao lote |
+| DELETE | `/lotes/:id/insumos/:insumoId` | Remove insumo           |
+
+---
+
+## 🔍 Inspeção
+
+| Método | Rota                  | Descrição         |
+| ------ | --------------------- | ----------------- |
+| POST   | `/lotes/:id/inspecao` | Registra inspeção |
+
+---
+
+## 🔄 Rastreabilidade
+
+| Método | Rota                                | Descrição      |
+| ------ | ----------------------------------- | -------------- |
+| GET    | `/rastreabilidade/lote/:id`         | Lote → insumos |
+| GET    | `/rastreabilidade/insumo?valor=...` | Insumo → lotes |
+
+---
+
+## 📊 Dashboard
+
+| Método | Rota         | Descrição                |
+| ------ | ------------ | ------------------------ |
+| GET    | `/dashboard` | Indicadores operacionais |
+
+**Retorna:**
+
+* lotesProduzidosHoje
+* unidadesProduzidasHoje
+* taxaAprovacaoMes
+* lotesAguardandoInspecao
+* ultimosLotes
+
+---
+
+## 🔗 Principais Funcionalidades
+
+### 📦 Lotes
+
+* Criação automática (`LOT-YYYY-NNNNN`)
+* Controle de status
+* Registro de produção
+
+### 🧪 Inspeção
+
+* Validação obrigatória de desvios
+* Atualização automática de status
+
+### 🔄 Rastreabilidade
+
+* Por lote → insumos utilizados
+* Por insumo → lotes afetados
+
+### 📊 Dashboard
+
+* Produção diária
+* Taxa de aprovação
+* Lotes pendentes
+* Últimos registros
+
+---
+
+## 🔄 Ciclo de Vida do Lote
+
+```mermaid
+stateDiagram-v2
+    [*] --> em_producao
+    em_producao --> aguardando_inspecao
+    aguardando_inspecao --> aprovado
+    aguardando_inspecao --> aprovado_restricao
+    aguardando_inspecao --> reprovado
+```
+
+---
+
+## 🧱 Modelo de Dados (Resumo)
+
+### Produto
+
+* Código único
+* Nome, linha, status
+
+### Lote
+
+* Número automático
+* Produto, operador
+* Quantidade produzida
+* Status e timestamps
+
+### Insumo
+
+* Nome, código, lote do fornecedor
+* Quantidade e unidade
+
+### Inspeção
+
+* Resultado (aprovado/reprovado)
+* Descrição de desvio (obrigatória)
+
+---
+
+## 📌 Requisitos Atendidos
+
+### ✔ Funcionais
+
+* Autenticação JWT
+* Rastreabilidade completa
+* Dashboard operacional
+* Controle de status de lote
+
+### ✔ Não Funcionais
+
+* Senhas com bcrypt
+* Variáveis sensíveis em `.env`
+* API protegida
+* Responsividade
+
+---
+
+## 📊 Status do Projeto
+
+🟡 Em desenvolvimento
+
+* Backend: funcional
+* Frontend: em evolução
+
+---
+
+## 👨‍💻 Autores
+
+* Paulo Rezende
+* Kariton Gomes
+* André Filipe
+
+---
+
+## 🔗 Repositório
+
+👉 [https://github.com/pvrezende/LotePath](https://github.com/pvrezende/LotePath)
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.

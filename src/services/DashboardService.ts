@@ -8,46 +8,87 @@ export class DashboardService {
         this.loteRepo = appDataSource.getRepository(Lote);
     }
 
+    private static toLocalDateString(date: Date): string {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
     async getDashboard() {
         const hoje = new Date();
-        const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-        const fimHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
+        const inicioHoje = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+        );
+        const fimHoje = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1)
+        );
 
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
+        const inicioMes = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+        );
+        const fimMes = DashboardService.toLocalDateString(
+            new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+        );
 
-        const lotes = await this.loteRepo.find({
-            relations: {
-                produto: true,
-                operador: true,
-            },
-            order: {
-                data_producao: "DESC",
-                aberto_em: "DESC",
-            },
-        });
+        // Lotes produzidos hoje (COUNT)
+        const lotesProduzidosHoje = await this.loteRepo
+            .createQueryBuilder("lote")
+            .where("lote.data_producao >= :inicioHoje", { inicioHoje })
+            .andWhere("lote.data_producao < :fimHoje", { fimHoje })
+            .getCount();
 
-        const lotesHoje = lotes.filter((lote) => {
-            const data = new Date(lote.data_producao);
-            return data >= inicioHoje && data < fimHoje;
-        });
+        // Unidades produzidas hoje (SUM)
+        const unidadesResult = await this.loteRepo
+            .createQueryBuilder("lote")
+            .select("COALESCE(SUM(lote.quantidade_prod), 0)", "total")
+            .where("lote.data_producao >= :inicioHoje", { inicioHoje })
+            .andWhere("lote.data_producao < :fimHoje", { fimHoje })
+            .getRawOne<{ total: string }>();
+        const unidadesProduzidasHoje = parseInt(unidadesResult?.total ?? "0", 10) || 0;
 
-        const lotesMesInspecionados = lotes.filter((lote) => {
-            const data = new Date(lote.data_producao);
-            const statusInspecionados = ["aprovado", "aprovado_restricao", "reprovado"];
-            return data >= inicioMes && data < fimMes && statusInspecionados.includes(lote.status);
-        });
+        // Lotes inspecionados no mês (COUNT)
+        const totalInspecionadosMes = await this.loteRepo
+            .createQueryBuilder("lote")
+            .where("lote.data_producao >= :inicioMes", { inicioMes })
+            .andWhere("lote.data_producao < :fimMes", { fimMes })
+            .andWhere("lote.status IN (:...statusInspecionados)", {
+                statusInspecionados: ["aprovado", "aprovado_restricao", "reprovado"],
+            })
+            .getCount();
 
-        const lotesAprovadosMes = lotesMesInspecionados.filter(
-            (lote) => lote.status === "aprovado"
-        ).length;
+        // Lotes aprovados no mês (inclui aprovado_restricao conforme PDF)
+        const lotesAprovadosMes = await this.loteRepo
+            .createQueryBuilder("lote")
+            .where("lote.data_producao >= :inicioMes", { inicioMes })
+            .andWhere("lote.data_producao < :fimMes", { fimMes })
+            .andWhere("lote.status IN (:...statusAprovados)", {
+                statusAprovados: ["aprovado", "aprovado_restricao"],
+            })
+            .getCount();
 
         const taxaAprovacaoMes =
-            lotesMesInspecionados.length > 0
-                ? Math.round((lotesAprovadosMes / lotesMesInspecionados.length) * 100)
+            totalInspecionadosMes > 0
+                ? Math.round((lotesAprovadosMes / totalInspecionadosMes) * 100)
                 : 0;
 
-        const ultimosLotes = lotes.slice(0, 10).map((lote) => ({
+        // Lotes aguardando inspeção (COUNT)
+        const lotesAguardandoInspecao = await this.loteRepo
+            .createQueryBuilder("lote")
+            .where("lote.status = :status", { status: "aguardando_inspecao" })
+            .getCount();
+
+        // Últimos 10 lotes
+        const ultimosLotesRaw = await this.loteRepo
+            .createQueryBuilder("lote")
+            .leftJoinAndSelect("lote.produto", "produto")
+            .leftJoinAndSelect("lote.operador", "operador")
+            .orderBy("lote.data_producao", "DESC")
+            .addOrderBy("lote.aberto_em", "DESC")
+            .take(10)
+            .getMany();
+
+        const ultimosLotes = ultimosLotesRaw.map((lote) => ({
             id: lote.id,
             numero_lote: lote.numero_lote,
             produto: lote.produto.nome,
@@ -58,15 +99,10 @@ export class DashboardService {
 
         return {
             indicadores: {
-                lotesProduzidosHoje: lotesHoje.length,
-                unidadesProduzidasHoje: lotesHoje.reduce(
-                    (acc, lote) => acc + lote.quantidade_prod,
-                    0
-                ),
+                lotesProduzidosHoje,
+                unidadesProduzidasHoje,
                 taxaAprovacaoMes,
-                lotesAguardandoInspecao: lotes.filter(
-                    (lote) => lote.status === "aguardando_inspecao"
-                ).length,
+                lotesAguardandoInspecao,
             },
             ultimosLotes,
         };

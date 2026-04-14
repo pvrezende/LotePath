@@ -5,6 +5,8 @@ import { Usuario } from "../entities/Usuario.js";
 import { CreateLoteDTO, UpdateStatusLoteDTO } from "../dtos/LoteDTO.js";
 import { AppError } from "../errors/AppError.js";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export class LoteService {
     private loteRepo: Repository<Lote>;
     private produtoRepo: Repository<Produto>;
@@ -120,4 +122,84 @@ export class LoteService {
 
         return lote;
     }
+
+    private static readonly VALID_STATUS = [
+        "em_producao",
+        "aguardando_inspecao",
+        "aprovado",
+        "aprovado_restricao",
+        "reprovado",
+    ] as const;
+
+    private static isValidDate(value: string): boolean {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return false;
+        // Ensure the date didn't roll over (e.g. 2024-02-30 → 2024-03-01)
+        return d.toISOString().startsWith(value);
+    }
+
+    async getAllWithFilters(
+        filters: {
+          produto_id?: string;
+          status?: string;
+          data_inicio?: string;
+          data_fim?: string;
+        },
+        page: number = 1,
+        limit: number = 20
+    ) {
+        if (filters.produto_id && !UUID_REGEX.test(filters.produto_id)) {
+            throw new AppError("Parâmetro 'produto_id' deve ser um UUID válido", 400);
+        }
+
+        if (!Number.isInteger(page) || page < 1) {
+            throw new AppError("Parâmetro 'page' deve ser um inteiro maior ou igual a 1", 400);
+        }
+        if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+            throw new AppError("Parâmetro 'limit' deve ser um inteiro entre 1 e 100", 400);
+        }
+
+        if (filters.status && !(LoteService.VALID_STATUS as readonly string[]).includes(filters.status)) {
+            throw new AppError(
+                `Status inválido. Valores permitidos: ${LoteService.VALID_STATUS.join(", ")}`,
+                400
+            );
+        }
+
+        if (filters.data_inicio && !LoteService.isValidDate(filters.data_inicio)) {
+            throw new AppError("Parâmetro 'data_inicio' deve estar no formato YYYY-MM-DD", 400);
+        }
+        if (filters.data_fim && !LoteService.isValidDate(filters.data_fim)) {
+            throw new AppError("Parâmetro 'data_fim' deve estar no formato YYYY-MM-DD", 400);
+        }
+
+        const query = this.loteRepo
+          .createQueryBuilder("lote")
+          .leftJoinAndSelect("lote.produto", "produto")
+          .leftJoinAndSelect("lote.operador", "operador")
+          .leftJoinAndSelect("lote.inspecao", "inspecao");
+
+        if (filters.produto_id) {
+          query.andWhere("produto.id = :produto_id", { produto_id: filters.produto_id });
+        }
+        if (filters.status) {
+          query.andWhere("lote.status = :status", { status: filters.status });
+        }
+        if (filters.data_inicio) {
+          query.andWhere("lote.data_producao >= :data_inicio", { data_inicio: filters.data_inicio });
+        }
+        if (filters.data_fim) {
+          query.andWhere("lote.data_producao <= :data_fim", { data_fim: filters.data_fim });
+        }
+    
+        const [lotes, total] = await query
+          .orderBy("lote.data_producao", "DESC")
+          .addOrderBy("lote.aberto_em", "DESC")
+          .skip((page - 1) * limit)
+          .take(limit)
+          .getManyAndCount();
+    
+        return { lotes, total, page, limit };
+  }
 }

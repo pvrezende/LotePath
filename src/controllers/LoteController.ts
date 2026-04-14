@@ -11,11 +11,38 @@ export class LoteController {
 
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const lotes = await this.loteService.getAll();
+            const {
+                produto_id,
+                status,
+                data_inicio,
+                data_fim,
+                page: pageRaw = '1',
+                limit: limitRaw = '20'
+            } = req.query;
+
+            const page = Number(pageRaw);
+            const limit = Number(limitRaw);
+
+            const result = await this.loteService.getAllWithFilters(
+                {
+                    produto_id: produto_id as string,
+                    status: status as string,
+                    data_inicio: data_inicio as string,
+                    data_fim: data_fim as string
+                },
+                page,
+                limit
+            );
 
             return res.status(200).json({
                 status: 200,
-                data: lotes
+                data: result.lotes,
+                pagination: {
+                    page: result.page,
+                    limit: result.limit,
+                    total: result.total,
+                    pages: Math.ceil(result.total / result.limit)
+                }
             });
         } catch (error) {
             return next(error);

@@ -1,6 +1,7 @@
 import {
     Column,
     Entity,
+    Index, // ✅ Adicionado para os índices
     ManyToOne,
     OneToMany,
     OneToOne,
@@ -12,6 +13,8 @@ import { InsumoLote } from "./Insumo_lote.js";
 import { InspecaoLote } from "./Inspecao_lote.js";
 
 @Entity("lotes")
+@Index(["data_producao", "status"]) // ✅ Otimiza Dashboard + Filtros RF08
+@Index(["status"]) // ✅ Suporta COUNT por status (ex: aguardando_inspecao no Dashboard)
 export class Lote {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
