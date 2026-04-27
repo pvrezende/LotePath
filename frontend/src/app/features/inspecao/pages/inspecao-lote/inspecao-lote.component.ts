@@ -490,7 +490,7 @@ export class InspecaoLoteComponent implements OnInit {
     };
 
     this.inspecaoService
-      .createInspecao(this.selectedLoteId, payload)
+      .createInspecao(this.selectedLoteId, payload as any)
       .subscribe({
         next: () => {
           this.saving = false;
