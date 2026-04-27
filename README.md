@@ -42,6 +42,7 @@ Sem um sistema centralizado, esse processo costuma depender de papel, planilhas 
 - rastreabilidade por insumo
 - endpoint de dashboard com indicadores e últimos lotes
 - seed com dados iniciais de teste
+- script automático para criação do banco de dados
 
 ### Frontend
 - login integrado ao backend
@@ -113,7 +114,7 @@ Antes de executar o projeto, é necessário ter instalado na máquina:
 - Node.js
 - npm
 - PostgreSQL
-- Angular CLI
+- Angular CLI (opcional, caso utilize `ng serve` diretamente)
 
 ## Como executar o backend
 
@@ -148,13 +149,15 @@ PORT=5336
 JWT_SECRET=sua_chave_jwt
 ```
 
-### 4. Crie o banco PostgreSQL
+### 4. Crie automaticamente o banco de dados
 
-No PostgreSQL, crie o banco com o nome:
+Com o PostgreSQL instalado e rodando, execute:
 
-```sql
-CREATE DATABASE indt_lotepath;
+```bash
+npm run db:create
 ```
+
+Esse script cria automaticamente o banco `indt_lotepath`, caso ele ainda não exista.
 
 ### 5. Rode o seed
 
@@ -293,15 +296,17 @@ Sugestão de apresentação final:
 - variáveis sensíveis ficam no arquivo `.env`, que não deve ser enviado ao GitHub
 - o arquivo `.env.example` serve como modelo de configuração para rodar o projeto em qualquer máquina
 - o backend principal da aplicação está na pasta `backend`
+- o script `npm run db:create` cria o banco automaticamente, mas o PostgreSQL precisa estar instalado e rodando
+- o script de criação do banco depende das credenciais informadas no arquivo `.env`
 
 ## Como rodar o projeto em qualquer PC
 
 ### Backend
 1. instalar Node.js
 2. instalar PostgreSQL
-3. criar o banco `indt_lotepath`
-4. configurar o arquivo `.env` em `backend/`
-5. rodar `npm install` em `backend/`
+3. configurar o arquivo `.env` em `backend/`
+4. rodar `npm install` em `backend/`
+5. rodar `npm run db:create`
 6. rodar `npm run seed`
 7. rodar `npm run dev`
 
