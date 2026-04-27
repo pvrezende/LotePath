@@ -58,6 +58,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'rastreabilidade',
+        loadComponent: () =>
+          import(
+            './features/rastreabilidade/pages/rastreabilidade/rastreabilidade.component'
+          ).then((m) => m.RastreabilidadeComponent),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

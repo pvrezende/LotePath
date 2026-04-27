@@ -73,6 +73,14 @@ import { AuthService } from '../../core/services/auth.service';
           >
             Inspeção
           </a>
+
+          <a
+            routerLink="/app/rastreabilidade"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Rastreabilidade
+          </a>
         </nav>
       </header>
 

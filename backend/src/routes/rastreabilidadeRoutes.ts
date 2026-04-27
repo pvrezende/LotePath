@@ -14,7 +14,7 @@ const rastreabilidadeRoutes = Router();
 rastreabilidadeRoutes.use(authMiddleware);
 
 rastreabilidadeRoutes.get(
-    "/rastreabilidade/lote/:id",
+    "/rastreabilidade/lote/:valor",
     authorizeRoles(Perfil.OPERADOR, Perfil.INSPETOR, Perfil.GESTOR),
     rastreabilidadeController.getByLote.bind(rastreabilidadeController)
 );
