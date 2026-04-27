@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,7 @@ import { LoginRequest, LoginResponse } from '../models/auth.model';
 export class AuthService {
   private http = inject(HttpClient);
 
-  private readonly apiUrl = 'http://localhost:5336';
+  private readonly apiUrl = environment.apiUrl;
 
   login(data: LoginRequest): Observable<LoginResponse> {
     return this.http
