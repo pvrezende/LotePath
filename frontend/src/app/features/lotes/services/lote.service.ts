@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CreateLoteRequest, Lote } from '../models/lote.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoteService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5336';
+  private readonly apiUrl = environment.apiUrl;
 
   getLotes(): Observable<{ status: number; data: Lote[] }> {
     return this.http.get<{ status: number; data: Lote[] }>(
