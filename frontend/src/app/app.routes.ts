@@ -44,6 +44,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'insumos',
+        loadComponent: () =>
+          import('./features/insumos/pages/insumos-lote/insumos-lote.component').then(
+            (m) => m.InsumosLoteComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

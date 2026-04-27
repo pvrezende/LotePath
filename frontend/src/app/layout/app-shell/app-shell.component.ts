@@ -57,6 +57,14 @@ import { AuthService } from '../../core/services/auth.service';
           >
             Lotes
           </a>
+
+          <a
+            routerLink="/app/insumos"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Insumos
+          </a>
         </nav>
       </header>
 
