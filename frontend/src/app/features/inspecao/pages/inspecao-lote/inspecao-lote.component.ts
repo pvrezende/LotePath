@@ -60,7 +60,21 @@ import { AuthService } from '../../../../core/services/auth.service';
 
             @if (selectedLote.inspecao) {
               <div class="already-inspected-box">
-                <h4>Inspeção já registrada</h4>
+                <div class="inspection-header">
+                  <h4>Inspeção já registrada</h4>
+
+                  @if (isGestor) {
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      (click)="onDeleteInspecao()"
+                      [disabled]="deleting"
+                    >
+                      {{ deleting ? 'Excluindo...' : 'Excluir inspeção' }}
+                    </button>
+                  }
+                </div>
+
                 <p><b>Resultado:</b> {{ formatResultado(selectedLote.inspecao.resultado) }}</p>
                 <p><b>Quantidade reprovada:</b> {{ selectedLote.inspecao.quantidade_repr }}</p>
                 <p>
@@ -266,8 +280,16 @@ import { AuthService } from '../../../../core/services/auth.service';
         margin-bottom: 12px;
       }
 
-      .already-inspected-box h4 {
+      .inspection-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
         margin-bottom: 12px;
+      }
+
+      .already-inspected-box h4 {
+        margin: 0;
         color: #0f172a;
       }
 
@@ -307,6 +329,16 @@ import { AuthService } from '../../../../core/services/auth.service';
       .secondary-btn {
         background: #e2e8f0;
         color: #0f172a;
+      }
+
+      .delete-btn {
+        background: #dc2626;
+        color: #ffffff;
+        height: 40px;
+      }
+
+      .delete-btn:hover {
+        background: #b91c1c;
       }
 
       .list-header {
@@ -368,7 +400,8 @@ import { AuthService } from '../../../../core/services/auth.service';
         }
 
         .selected-lote-top,
-        .list-header {
+        .list-header,
+        .inspection-header {
           flex-direction: column;
           align-items: flex-start;
         }
@@ -387,6 +420,7 @@ export class InspecaoLoteComponent implements OnInit {
   selectedLote: Lote | null = null;
 
   saving = false;
+  deleting = false;
   errorMessage = '';
   successMessage = '';
 
@@ -395,6 +429,10 @@ export class InspecaoLoteComponent implements OnInit {
     quantidade_repr: [0, [Validators.required, Validators.min(0)]],
     descricao_desvio: [''],
   });
+
+  get isGestor(): boolean {
+    return this.authService.getUser()?.perfil === 'gestor';
+  }
 
   ngOnInit(): void {
     this.loadLotes();
@@ -414,6 +452,9 @@ export class InspecaoLoteComponent implements OnInit {
   onSelectLote(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedLoteId = value;
+
+    this.errorMessage = '';
+    this.successMessage = '';
 
     if (!value) {
       this.selectedLote = null;
@@ -489,36 +530,72 @@ export class InspecaoLoteComponent implements OnInit {
       descricao_desvio: this.inspecaoForm.value.descricao_desvio?.trim() || null,
     };
 
-    this.inspecaoService
-      .createInspecao(this.selectedLoteId, payload as any)
-      .subscribe({
-        next: () => {
-          this.saving = false;
-          this.successMessage = 'Inspeção registrada com sucesso.';
-          this.refreshSelectedLote();
-        },
-        error: (error) => {
-          this.saving = false;
+    this.inspecaoService.createInspecao(this.selectedLoteId, payload).subscribe({
+      next: (response) => {
+        this.saving = false;
+        this.successMessage = 'Inspeção registrada com sucesso.';
+        this.selectedLote = response.lote;
+      },
+      error: (error) => {
+        this.saving = false;
 
-          if (error.status === 403) {
-            this.errorMessage =
-              'Seu perfil não tem permissão para registrar inspeção.';
-            return;
-          }
+        if (error.status === 403) {
+          this.errorMessage =
+            'Seu perfil não tem permissão para registrar inspeção.';
+          return;
+        }
 
-          if (error.status === 409) {
-            this.errorMessage = 'Este lote já possui inspeção registrada.';
-            return;
-          }
+        if (error.status === 409) {
+          this.errorMessage = 'Este lote já possui inspeção registrada.';
+          return;
+        }
 
-          if (error.status === 400) {
-            this.errorMessage =
-              'Dados inválidos para registrar a inspeção. Verifique os campos preenchidos.';
-            return;
-          }
+        if (error.status === 400) {
+          this.errorMessage =
+            'Dados inválidos para registrar a inspeção. Verifique os campos preenchidos.';
+          return;
+        }
 
-          this.errorMessage = 'Erro ao registrar inspeção do lote.';
-        },
-      });
+        this.errorMessage = 'Erro ao registrar inspeção do lote.';
+      },
+    });
+  }
+
+  onDeleteInspecao(): void {
+    if (!this.selectedLoteId || !this.isGestor) return;
+
+    const confirmDelete = window.confirm(
+      'Tem certeza que deseja excluir esta inspeção?'
+    );
+
+    if (!confirmDelete) return;
+
+    this.deleting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.inspecaoService.deleteInspecao(this.selectedLoteId).subscribe({
+      next: (response) => {
+        this.deleting = false;
+        this.successMessage = response.message;
+        this.selectedLote = response.lote;
+      },
+      error: (error) => {
+        this.deleting = false;
+
+        if (error.status === 403) {
+          this.errorMessage =
+            'Seu perfil não tem permissão para excluir inspeção.';
+          return;
+        }
+
+        if (error.status === 404) {
+          this.errorMessage = 'Não foi encontrada inspeção para este lote.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao excluir inspeção do lote.';
+      },
+    });
   }
 }

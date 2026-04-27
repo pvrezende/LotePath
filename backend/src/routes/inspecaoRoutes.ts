@@ -22,4 +22,10 @@ inspecaoRoutes.post(
     inspecaoController.create.bind(inspecaoController)
 );
 
+inspecaoRoutes.delete(
+    "/lotes/:id/inspecao",
+    authorizeRoles(Perfil.GESTOR),
+    inspecaoController.delete.bind(inspecaoController)
+);
+
 export default inspecaoRoutes;

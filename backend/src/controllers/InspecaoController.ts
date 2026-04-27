@@ -21,4 +21,19 @@ export class InspecaoController {
             return next(error);
         }
     }
+
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const loteId = req.params.id as string;
+
+            const lote = await this.inspecaoService.delete(loteId);
+
+            return res.status(200).json({
+                message: "Inspeção excluída com sucesso",
+                lote
+            });
+        } catch (error) {
+            return next(error);
+        }
+    }
 }
