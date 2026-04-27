@@ -1,6 +1,6 @@
 # LotePath
 
-Sistema web de rastreamento de produção por lotes, desenvolvido para o programa **INDT**, com foco em controle produtivo, inspeção de qualidade, rastreabilidade e apoio a cenários de recall.
+Sistema web de rastreamento de produção por lotes, desenvolvido para o programa **INDT**, com foco em controle produtivo, inspeção de qualidade, vínculo de insumos, rastreabilidade e apoio a cenários de recall.
 
 ## Visão geral
 
@@ -29,30 +29,37 @@ Sem um sistema centralizado, esse processo costuma depender de papel, planilhas 
 
 ### Backend
 - autenticação com JWT
+- middleware de autenticação nas rotas privadas
 - controle de acesso por perfil
 - CRUD de produtos
 - abertura de lotes com número automático
+- listagem e detalhamento de lotes
 - atualização de status do lote
 - vínculo de insumos por lote
+- remoção de insumos por lote
 - registro de inspeção
 - rastreabilidade por lote
 - rastreabilidade por insumo
 - endpoint de dashboard com indicadores e últimos lotes
+- seed com dados iniciais de teste
 
 ### Frontend
-- login com integração real ao backend
-- armazenamento de token e sessão
+- login integrado ao backend
+- armazenamento de token e usuário em sessão
 - rotas protegidas com guard
-- interceptor para envio automático do token
-- logout
-- dashboard com:
-  - indicadores
-  - últimos lotes
-  - badges de status
-  - loading
-  - tratamento de erro
-  - empty state
-- layout com navbar e footer
+- interceptor de autenticação
+- interceptor de erro e sessão
+- dashboard com dados reais da API
+- cards de indicadores
+- últimos lotes
+- badges de status
+- loading, mensagens de erro e empty state
+- navbar e footer
+- tela de produtos com listagem e cadastro
+- tela de lotes com abertura e listagem
+- modal de detalhes do lote
+- integração com `environment.ts`
+- melhorias de responsividade em andamento
 
 ## Stack utilizada
 
@@ -74,28 +81,32 @@ Sem um sistema centralizado, esse processo costuma depender de papel, planilhas 
 
 ```text
 LotePath/
-├── backend/                  # pasta auxiliar enviada no projeto
+├── backend/                  # backend principal da aplicação
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── database/
+│   │   ├── dtos/
+│   │   ├── entities/
+│   │   ├── errors/
+│   │   ├── middlewares/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── types/
+│   │   └── server.ts
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── package.json
+│   ├── package-lock.json
+│   └── tsconfig.json
 ├── frontend/                 # aplicação Angular
-├── src/                      # backend principal
-│   ├── controllers/
-│   ├── database/
-│   ├── dtos/
-│   ├── entities/
-│   ├── errors/
-│   ├── middlewares/
-│   ├── routes/
-│   ├── services/
-│   ├── types/
-│   └── server.ts
-├── package.json
-├── .env.example
-├── .gitignore
-└── README.md
+│   ├── src/
+│   ├── package.json
+│   └── ...
+├── README.md
+└── apresentação.md
 ```
 
-## Configuração do projeto
-
-### Requisitos
+## Requisitos
 
 Antes de executar o projeto, é necessário ter instalado na máquina:
 
@@ -106,13 +117,21 @@ Antes de executar o projeto, é necessário ter instalado na máquina:
 
 ## Como executar o backend
 
-### 1. Instale as dependências
+### 1. Entre na pasta do backend
+
+```bash
+cd backend
+```
+
+### 2. Instale as dependências
+
 ```bash
 npm install
 ```
 
-### 2. Configure o arquivo `.env`
-Use o arquivo `.env.example` como base e crie um arquivo `.env` na raiz do projeto.
+### 3. Configure o arquivo `.env`
+
+Use o arquivo `.env.example` como base e crie um arquivo `.env` dentro da pasta `backend`.
 
 Exemplo:
 
@@ -129,21 +148,24 @@ PORT=5336
 JWT_SECRET=sua_chave_jwt
 ```
 
-### 3. Crie o banco PostgreSQL
+### 4. Crie o banco PostgreSQL
+
 No PostgreSQL, crie o banco com o nome:
 
 ```sql
 CREATE DATABASE indt_lotepath;
 ```
 
-### 4. Rode o seed
+### 5. Rode o seed
+
 Esse comando popula o banco com dados iniciais de teste:
 
 ```bash
 npm run seed
 ```
 
-### 5. Inicie o backend
+### 6. Inicie o backend
+
 ```bash
 npm run dev
 ```
@@ -157,23 +179,40 @@ http://localhost:5336
 ## Como executar o frontend
 
 ### 1. Entre na pasta do frontend
+
 ```bash
 cd frontend
 ```
 
 ### 2. Instale as dependências
+
 ```bash
 npm install
 ```
 
 ### 3. Configure a URL da API no Angular
-No frontend, o acesso ao backend deve ser feito via `environment.ts`, apontando para:
+
+No frontend, a URL do backend fica centralizada em:
+
+```text
+src/environments/environment.ts
+src/environments/environment.development.ts
+```
+
+Valor padrão:
 
 ```ts
 apiUrl: 'http://localhost:5336'
 ```
 
 ### 4. Inicie o frontend
+
+```bash
+npm start
+```
+
+ou
+
 ```bash
 ng serve
 ```
@@ -194,6 +233,10 @@ Criadas pelo seed do backend:
 
 ### Inspetor
 - E-mail: `inspetor@lotepath.com`
+- Senha: `123456`
+
+### Gestor
+- E-mail: `gestor@lotepath.com`
 - Senha: `123456`
 
 ## Rotas principais da API
@@ -233,12 +276,14 @@ Criadas pelo seed do backend:
 Sugestão de apresentação final:
 
 1. acessar a tela de login
-2. autenticar com usuário de teste
+2. autenticar com um usuário de teste
 3. abrir o dashboard
 4. mostrar os indicadores e os últimos lotes
-5. mostrar os badges de status
-6. navegar para o fluxo de rastreabilidade
-7. demonstrar o cenário de recall com insumo suspeito
+5. mostrar o cadastro de produtos
+6. abrir um novo lote
+7. abrir o modal de detalhes do lote
+8. navegar para o fluxo de rastreabilidade
+9. demonstrar o cenário de recall com insumo suspeito
 
 ## Observações técnicas
 
@@ -247,10 +292,28 @@ Sugestão de apresentação final:
 - o frontend consome a API usando a URL configurada no `environment.ts`
 - variáveis sensíveis ficam no arquivo `.env`, que não deve ser enviado ao GitHub
 - o arquivo `.env.example` serve como modelo de configuração para rodar o projeto em qualquer máquina
+- o backend principal da aplicação está na pasta `backend`
+
+## Como rodar o projeto em qualquer PC
+
+### Backend
+1. instalar Node.js
+2. instalar PostgreSQL
+3. criar o banco `indt_lotepath`
+4. configurar o arquivo `.env` em `backend/`
+5. rodar `npm install` em `backend/`
+6. rodar `npm run seed`
+7. rodar `npm run dev`
+
+### Frontend
+1. entrar em `frontend/`
+2. rodar `npm install`
+3. conferir a URL da API em `src/environments/`
+4. rodar `npm start` ou `ng serve`
 
 ## Status do projeto
 
-Projeto com backend funcional até a Fase 4, autenticação com JWT, controle de acesso por perfil e estrutura pronta para a etapa final de dashboard, polimento e apresentação.
+Projeto com backend funcional, frontend Angular funcional e fluxo principal já integrado para login, dashboard, produtos e lotes. As próximas evoluções incluem insumos por lote, inspeção no frontend, rastreabilidade visual, polimento final de responsividade e apresentação.
 
 ## Autores
 
