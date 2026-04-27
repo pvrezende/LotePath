@@ -65,6 +65,14 @@ import { AuthService } from '../../core/services/auth.service';
           >
             Insumos
           </a>
+
+          <a
+            routerLink="/app/inspecao"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Inspeção
+          </a>
         </nav>
       </header>
 

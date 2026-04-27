@@ -35,6 +35,15 @@ export interface Lote {
     quantidade: number;
     unidade: string;
   }[];
+  inspecao?: {
+    id: string;
+    resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado';
+    quantidade_repr: number;
+    descricao_desvio: string | null;
+    inspecionado_em: string;
+    loteId: string;
+    inspetorId: string;
+  };
 }
 
 export interface CreateLoteRequest {

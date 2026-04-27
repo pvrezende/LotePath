@@ -51,6 +51,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'inspecao',
+        loadComponent: () =>
+          import('./features/inspecao/pages/inspecao-lote/inspecao-lote.component').then(
+            (m) => m.InspecaoLoteComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',
