@@ -8,12 +8,14 @@ import { DashboardService } from '../../services/dashboard.service';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     StatCardComponent,
     StatusBadgeComponent,
     EmptyStateComponent,
@@ -25,11 +27,42 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           <span class="eyebrow">PAINEL OPERACIONAL</span>
           <h2>Dashboard de Produção</h2>
           <p>
-            Acompanhe indicadores do dia e os últimos lotes registrados para
-            monitorar o processo produtivo.
+            Acompanhe indicadores do dia e os lotes registrados na data filtrada
+            para monitorar o processo produtivo.
           </p>
         </div>
       </div>
+
+      <section class="filter-card">
+        <div class="filter-header">
+          <div>
+            <h3>Filtro de data</h3>
+            <p>Por padrão, a dashboard abre com a data de hoje.</p>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="form-group">
+            <label for="dataFiltro">Data de referência</label>
+            <input
+              id="dataFiltro"
+              type="date"
+              [(ngModel)]="selectedDate"
+            />
+          </div>
+
+          <div class="filter-actions">
+            <button type="button" (click)="applyFilter()">Filtrar</button>
+            <button type="button" class="secondary-btn" (click)="setToday()">
+              Hoje
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-note">
+          <span>Exibindo dados de: <strong>{{ formatDate(selectedDate) }}</strong></span>
+        </div>
+      </section>
 
       @if (loading) {
         <div class="feedback-box">
@@ -44,11 +77,11 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       } @else {
         <div class="stats-grid">
           <app-stat-card
-            label="Lotes produzidos hoje"
+            label="Lotes produzidos na data"
             [value]="indicadores.lotesProduzidosHoje"
           />
           <app-stat-card
-            label="Unidades produzidas hoje"
+            label="Unidades produzidas na data"
             [value]="indicadores.unidadesProduzidasHoje"
           />
           <app-stat-card
@@ -56,7 +89,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
             [value]="indicadores.taxaAprovacaoMes + '%'"
           />
           <app-stat-card
-            label="Lotes aguardando inspeção"
+            label="Lotes pendentes de inspeção"
             [value]="indicadores.lotesAguardandoInspecao"
           />
         </div>
@@ -64,8 +97,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         <section class="table-section">
           <div class="section-header">
             <div>
-              <h3>Últimos lotes</h3>
-              <p>Os 10 lotes mais recentes registrados no sistema.</p>
+              <h3>Lotes da data filtrada</h3>
+              <p>Lotes encontrados para {{ formatDate(selectedDate) }}.</p>
             </div>
 
             <span class="section-chip">
@@ -103,7 +136,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           } @else {
             <app-empty-state
               title="Nenhum lote encontrado"
-              description="Ainda não existem lotes suficientes para exibir no dashboard."
+              [description]="'Não existem lotes para a data ' + formatDate(selectedDate) + '.'"
             />
           }
         </section>
@@ -144,6 +177,85 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         color: #64748b;
         line-height: 1.6;
         max-width: 760px;
+      }
+
+      .filter-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+      }
+
+      .filter-header h3 {
+        margin-bottom: 4px;
+        font-size: 20px;
+        color: #0f172a;
+      }
+
+      .filter-header p {
+        color: #64748b;
+      }
+
+      .filter-row {
+        display: flex;
+        align-items: end;
+        gap: 16px;
+        margin-top: 18px;
+        flex-wrap: wrap;
+      }
+
+      .form-group {
+        min-width: 260px;
+        flex: 1;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px 14px;
+        outline: none;
+        background: #fff;
+      }
+
+      input:focus {
+        border-color: #2563eb;
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        height: 44px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 10px;
+        background: #2563eb;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .secondary-btn {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .filter-note {
+        margin-top: 16px;
+        color: #475569;
+        font-size: 14px;
       }
 
       .stats-grid {
@@ -288,7 +400,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           font-size: 28px;
         }
 
-        .table-section {
+        .table-section,
+        .filter-card {
           padding: 18px;
         }
       }
@@ -300,6 +413,7 @@ export class DashboardComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
+  selectedDate = this.getTodayDate();
 
   indicadores: DashboardIndicadores = {
     lotesProduzidosHoje: 0,
@@ -314,11 +428,40 @@ export class DashboardComponent implements OnInit {
     this.loadDashboard();
   }
 
+  private getTodayDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  formatDate(date: string): string {
+    if (!date) return '';
+
+    const [year, month, day] = date.split('-');
+
+    if (!year || !month || !day) {
+      return date;
+    }
+
+    return `${day}/${month}/${year}`;
+  }
+
+  applyFilter(): void {
+    this.loadDashboard();
+  }
+
+  setToday(): void {
+    this.selectedDate = this.getTodayDate();
+    this.loadDashboard();
+  }
+
   private loadDashboard(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.dashboardService.getDashboard().subscribe({
+    this.dashboardService.getDashboard(this.selectedDate).subscribe({
       next: (response) => {
         this.indicadores = response.indicadores;
         this.ultimosLotes = response.ultimosLotes;

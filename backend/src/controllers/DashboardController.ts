@@ -10,7 +10,8 @@ export class DashboardController {
 
     async get(req: Request, res: Response, next: NextFunction) {
         try {
-            const dashboard = await this.dashboardService.getDashboard();
+            const data = req.query.data as string | undefined;
+            const dashboard = await this.dashboardService.getDashboard(data);
 
             return res.status(200).json(dashboard);
         } catch (error) {

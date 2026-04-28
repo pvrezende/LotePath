@@ -19,6 +19,20 @@ export class DashboardService {
         return `${day}/${month}/${year}`;
     }
 
+    private normalizeReferenceDate(dateParam?: string): Date {
+        if (!dateParam) {
+            return new Date();
+        }
+
+        const [year, month, day] = dateParam.split("-").map(Number);
+
+        if (!year || !month || !day) {
+            return new Date();
+        }
+
+        return new Date(year, month - 1, day);
+    }
+
     private isSameDay(dateValue: string | Date, reference: Date): boolean {
         const raw = String(dateValue).slice(0, 10);
         const [year, month, day] = raw.split("-").map(Number);
@@ -48,8 +62,8 @@ export class DashboardService {
         );
     }
 
-    async getDashboard() {
-        const hoje = new Date();
+    async getDashboard(data?: string) {
+        const dataReferencia = this.normalizeReferenceDate(data);
 
         const lotes = await this.loteRepo.find({
             relations: {
@@ -62,14 +76,14 @@ export class DashboardService {
             },
         });
 
-        const lotesHoje = lotes.filter((lote) =>
-            this.isSameDay(lote.data_producao, hoje)
+        const lotesDaData = lotes.filter((lote) =>
+            this.isSameDay(lote.data_producao, dataReferencia)
         );
 
         const lotesMesInspecionados = lotes.filter((lote) => {
             const statusInspecionados = ["aprovado", "aprovado_restricao", "reprovado"];
             return (
-                this.isSameMonth(lote.data_producao, hoje) &&
+                this.isSameMonth(lote.data_producao, dataReferencia) &&
                 statusInspecionados.includes(lote.status)
             );
         });
@@ -85,7 +99,13 @@ export class DashboardService {
                 ? Math.round((lotesAprovadosMes / lotesMesInspecionados.length) * 100)
                 : 0;
 
-        const ultimosLotes = lotes.slice(0, 10).map((lote) => ({
+        const lotesPendentesNaData = lotesDaData.filter(
+            (lote) =>
+                lote.status === "em_producao" ||
+                lote.status === "aguardando_inspecao"
+        ).length;
+
+        const lotesDaDataFormatados = lotesDaData.map((lote) => ({
             id: lote.id,
             numero_lote: lote.numero_lote,
             produto: lote.produto.nome,
@@ -95,18 +115,19 @@ export class DashboardService {
         }));
 
         return {
+            dataReferencia: `${dataReferencia.getFullYear()}-${String(
+                dataReferencia.getMonth() + 1
+            ).padStart(2, "0")}-${String(dataReferencia.getDate()).padStart(2, "0")}`,
             indicadores: {
-                lotesProduzidosHoje: lotesHoje.length,
-                unidadesProduzidasHoje: lotesHoje.reduce(
+                lotesProduzidosHoje: lotesDaData.length,
+                unidadesProduzidasHoje: lotesDaData.reduce(
                     (acc, lote) => acc + lote.quantidade_prod,
                     0
                 ),
                 taxaAprovacaoMes,
-                lotesAguardandoInspecao: lotes.filter(
-                    (lote) => lote.status === "aguardando_inspecao"
-                ).length,
+                lotesAguardandoInspecao: lotesPendentesNaData,
             },
-            ultimosLotes,
+            ultimosLotes: lotesDaDataFormatados,
         };
     }
 }
