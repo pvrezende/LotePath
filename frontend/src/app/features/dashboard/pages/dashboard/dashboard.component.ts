@@ -40,6 +40,21 @@ import { FormsModule } from '@angular/forms';
           </div>
         </div>
 
+        <div class="quick-filters">
+          <button type="button" class="quick-btn" (click)="setToday()">
+            Hoje
+          </button>
+          <button type="button" class="quick-btn" (click)="setYesterday()">
+            Ontem
+          </button>
+          <button type="button" class="quick-btn" (click)="setLast7Days()">
+            Últimos 7 dias
+          </button>
+          <button type="button" class="quick-btn" (click)="setCurrentMonth()">
+            Este mês
+          </button>
+        </div>
+
         <div class="filter-grid">
           <div class="form-group">
             <label for="dataInicial">Data inicial</label>
@@ -61,8 +76,8 @@ import { FormsModule } from '@angular/forms';
 
           <div class="filter-actions">
             <button type="button" (click)="applyFilter()">Filtrar</button>
-            <button type="button" class="secondary-btn" (click)="setToday()">
-              Hoje
+            <button type="button" class="secondary-btn" (click)="resetFilter()">
+              Limpar
             </button>
           </div>
         </div>
@@ -215,12 +230,19 @@ import { FormsModule } from '@angular/forms';
         color: #64748b;
       }
 
+      .quick-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+        margin-bottom: 18px;
+      }
+
       .filter-grid {
         display: grid;
         grid-template-columns: 1fr 1fr auto;
         gap: 16px;
         align-items: end;
-        margin-top: 18px;
       }
 
       .form-group {
@@ -267,6 +289,17 @@ import { FormsModule } from '@angular/forms';
       .secondary-btn {
         background: #e2e8f0;
         color: #0f172a;
+      }
+
+      .quick-btn {
+        height: 40px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+      }
+
+      .quick-btn:hover {
+        background: #dbeafe;
       }
 
       .filter-note {
@@ -460,10 +493,20 @@ export class DashboardComponent implements OnInit {
 
   private getTodayDate(): string {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    return this.toInputDate(today);
+  }
+
+  private toInputDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private addDays(baseDate: Date, days: number): Date {
+    const result = new Date(baseDate);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
   formatDate(date: string): string {
@@ -487,10 +530,38 @@ export class DashboardComponent implements OnInit {
     this.loadDashboard();
   }
 
+  resetFilter(): void {
+    this.setToday();
+  }
+
   setToday(): void {
     const today = this.getTodayDate();
     this.startDate = today;
     this.endDate = today;
+    this.loadDashboard();
+  }
+
+  setYesterday(): void {
+    const yesterday = this.addDays(new Date(), -1);
+    const formatted = this.toInputDate(yesterday);
+    this.startDate = formatted;
+    this.endDate = formatted;
+    this.loadDashboard();
+  }
+
+  setLast7Days(): void {
+    const today = new Date();
+    const start = this.addDays(today, -6);
+    this.startDate = this.toInputDate(start);
+    this.endDate = this.toInputDate(today);
+    this.loadDashboard();
+  }
+
+  setCurrentMonth(): void {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.startDate = this.toInputDate(start);
+    this.endDate = this.toInputDate(today);
     this.loadDashboard();
   }
 
