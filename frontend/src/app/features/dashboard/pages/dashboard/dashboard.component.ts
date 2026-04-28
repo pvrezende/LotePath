@@ -27,8 +27,7 @@ import { FormsModule } from '@angular/forms';
           <span class="eyebrow">PAINEL OPERACIONAL</span>
           <h2>Dashboard de Produção</h2>
           <p>
-            Acompanhe indicadores do dia e os lotes registrados na data filtrada
-            para monitorar o processo produtivo.
+            Acompanhe indicadores do período filtrado para monitorar o processo produtivo.
           </p>
         </div>
       </div>
@@ -36,18 +35,27 @@ import { FormsModule } from '@angular/forms';
       <section class="filter-card">
         <div class="filter-header">
           <div>
-            <h3>Filtro de data</h3>
-            <p>Por padrão, a dashboard abre com a data de hoje.</p>
+            <h3>Filtro por período</h3>
+            <p>Por padrão, a dashboard abre com o intervalo do dia atual.</p>
           </div>
         </div>
 
-        <div class="filter-row">
+        <div class="filter-grid">
           <div class="form-group">
-            <label for="dataFiltro">Data de referência</label>
+            <label for="dataInicial">Data inicial</label>
             <input
-              id="dataFiltro"
+              id="dataInicial"
               type="date"
-              [(ngModel)]="selectedDate"
+              [(ngModel)]="startDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="dataFinal">Data final</label>
+            <input
+              id="dataFinal"
+              type="date"
+              [(ngModel)]="endDate"
             />
           </div>
 
@@ -60,7 +68,12 @@ import { FormsModule } from '@angular/forms';
         </div>
 
         <div class="filter-note">
-          <span>Exibindo dados de: <strong>{{ formatDate(selectedDate) }}</strong></span>
+          <span>
+            Exibindo dados de:
+            <strong>{{ formatDate(startDate) }}</strong>
+            até
+            <strong>{{ formatDate(endDate) }}</strong>
+          </span>
         </div>
       </section>
 
@@ -77,11 +90,11 @@ import { FormsModule } from '@angular/forms';
       } @else {
         <div class="stats-grid">
           <app-stat-card
-            label="Lotes produzidos na data"
+            label="Lotes produzidos no período"
             [value]="indicadores.lotesProduzidosHoje"
           />
           <app-stat-card
-            label="Unidades produzidas na data"
+            label="Unidades produzidas no período"
             [value]="indicadores.unidadesProduzidasHoje"
           />
           <app-stat-card
@@ -89,7 +102,7 @@ import { FormsModule } from '@angular/forms';
             [value]="indicadores.taxaAprovacaoMes + '%'"
           />
           <app-stat-card
-            label="Lotes pendentes de inspeção"
+            label="Lotes pendentes no período"
             [value]="indicadores.lotesAguardandoInspecao"
           />
         </div>
@@ -97,8 +110,13 @@ import { FormsModule } from '@angular/forms';
         <section class="table-section">
           <div class="section-header">
             <div>
-              <h3>Lotes da data filtrada</h3>
-              <p>Lotes encontrados para {{ formatDate(selectedDate) }}.</p>
+              <h3>Lotes do período filtrado</h3>
+              <p>
+                Lotes encontrados entre
+                {{ formatDate(startDate) }}
+                e
+                {{ formatDate(endDate) }}.
+              </p>
             </div>
 
             <span class="section-chip">
@@ -136,7 +154,7 @@ import { FormsModule } from '@angular/forms';
           } @else {
             <app-empty-state
               title="Nenhum lote encontrado"
-              [description]="'Não existem lotes para a data ' + formatDate(selectedDate) + '.'"
+              [description]="'Não existem lotes entre ' + formatDate(startDate) + ' e ' + formatDate(endDate) + '.'"
             />
           }
         </section>
@@ -197,17 +215,16 @@ import { FormsModule } from '@angular/forms';
         color: #64748b;
       }
 
-      .filter-row {
-        display: flex;
-        align-items: end;
+      .filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
         gap: 16px;
+        align-items: end;
         margin-top: 18px;
-        flex-wrap: wrap;
       }
 
       .form-group {
-        min-width: 260px;
-        flex: 1;
+        min-width: 0;
       }
 
       label {
@@ -382,12 +399,24 @@ import { FormsModule } from '@angular/forms';
         .stats-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
+        .filter-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-actions {
+          grid-column: 1 / -1;
+        }
       }
 
       @media (max-width: 720px) {
         .section-header {
           flex-direction: column;
           align-items: flex-start;
+        }
+
+        .filter-grid {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -413,7 +442,8 @@ export class DashboardComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
-  selectedDate = this.getTodayDate();
+  startDate = this.getTodayDate();
+  endDate = this.getTodayDate();
 
   indicadores: DashboardIndicadores = {
     lotesProduzidosHoje: 0,
@@ -449,11 +479,18 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilter(): void {
+    if (this.startDate > this.endDate) {
+      this.errorMessage = 'A data inicial não pode ser maior que a data final.';
+      return;
+    }
+
     this.loadDashboard();
   }
 
   setToday(): void {
-    this.selectedDate = this.getTodayDate();
+    const today = this.getTodayDate();
+    this.startDate = today;
+    this.endDate = today;
     this.loadDashboard();
   }
 
@@ -461,7 +498,7 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.dashboardService.getDashboard(this.selectedDate).subscribe({
+    this.dashboardService.getDashboard(this.startDate, this.endDate).subscribe({
       next: (response) => {
         this.indicadores = response.indicadores;
         this.ultimosLotes = response.ultimosLotes;
@@ -469,6 +506,11 @@ export class DashboardComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
+
+        if (error.status === 400) {
+          this.errorMessage = 'Período inválido para o filtro.';
+          return;
+        }
 
         if (error.status === 401) {
           this.errorMessage = 'Sua sessão expirou. Faça login novamente.';

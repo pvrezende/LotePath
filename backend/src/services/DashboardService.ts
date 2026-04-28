@@ -19,7 +19,7 @@ export class DashboardService {
         return `${day}/${month}/${year}`;
     }
 
-    private normalizeReferenceDate(dateParam?: string): Date {
+    private normalizeDate(dateParam?: string): Date {
         if (!dateParam) {
             return new Date();
         }
@@ -33,37 +33,66 @@ export class DashboardService {
         return new Date(year, month - 1, day);
     }
 
-    private isSameDay(dateValue: string | Date, reference: Date): boolean {
+    private parseDateParts(dateValue: string | Date) {
         const raw = String(dateValue).slice(0, 10);
         const [year, month, day] = raw.split("-").map(Number);
 
         if (!year || !month || !day) {
+            return null;
+        }
+
+        return { year, month, day };
+    }
+
+    private isBetweenDates(
+        dateValue: string | Date,
+        startDate: Date,
+        endDate: Date
+    ): boolean {
+        const parts = this.parseDateParts(dateValue);
+
+        if (!parts) {
             return false;
         }
 
-        return (
-            year === reference.getFullYear() &&
-            month === reference.getMonth() + 1 &&
-            day === reference.getDate()
+        const current = new Date(parts.year, parts.month - 1, parts.day);
+        const normalizedStart = new Date(
+            startDate.getFullYear(),
+            startDate.getMonth(),
+            startDate.getDate()
         );
+        const normalizedEnd = new Date(
+            endDate.getFullYear(),
+            endDate.getMonth(),
+            endDate.getDate()
+        );
+
+        return current >= normalizedStart && current <= normalizedEnd;
     }
 
     private isSameMonth(dateValue: string | Date, reference: Date): boolean {
-        const raw = String(dateValue).slice(0, 10);
-        const [year, month] = raw.split("-").map(Number);
+        const parts = this.parseDateParts(dateValue);
 
-        if (!year || !month) {
+        if (!parts) {
             return false;
         }
 
         return (
-            year === reference.getFullYear() &&
-            month === reference.getMonth() + 1
+            parts.year === reference.getFullYear() &&
+            parts.month === reference.getMonth() + 1
         );
     }
 
-    async getDashboard(data?: string) {
-        const dataReferencia = this.normalizeReferenceDate(data);
+    async getDashboard(dataInicial?: string, dataFinal?: string) {
+        const hoje = new Date();
+        const startDate = this.normalizeDate(dataInicial);
+        const endDate = this.normalizeDate(dataFinal ?? dataInicial);
+
+        if (startDate > endDate) {
+            const erro = new Error("A data inicial não pode ser maior que a data final.");
+            (erro as any).statusCode = 400;
+            throw erro;
+        }
 
         const lotes = await this.loteRepo.find({
             relations: {
@@ -76,14 +105,16 @@ export class DashboardService {
             },
         });
 
-        const lotesDaData = lotes.filter((lote) =>
-            this.isSameDay(lote.data_producao, dataReferencia)
+        const lotesDoPeriodo = lotes.filter((lote) =>
+            this.isBetweenDates(lote.data_producao, startDate, endDate)
         );
+
+        const referenciaMes = endDate ?? hoje;
 
         const lotesMesInspecionados = lotes.filter((lote) => {
             const statusInspecionados = ["aprovado", "aprovado_restricao", "reprovado"];
             return (
-                this.isSameMonth(lote.data_producao, dataReferencia) &&
+                this.isSameMonth(lote.data_producao, referenciaMes) &&
                 statusInspecionados.includes(lote.status)
             );
         });
@@ -99,13 +130,13 @@ export class DashboardService {
                 ? Math.round((lotesAprovadosMes / lotesMesInspecionados.length) * 100)
                 : 0;
 
-        const lotesPendentesNaData = lotesDaData.filter(
+        const lotesPendentesNoPeriodo = lotesDoPeriodo.filter(
             (lote) =>
                 lote.status === "em_producao" ||
                 lote.status === "aguardando_inspecao"
         ).length;
 
-        const lotesDaDataFormatados = lotesDaData.map((lote) => ({
+        const lotesDoPeriodoFormatados = lotesDoPeriodo.map((lote) => ({
             id: lote.id,
             numero_lote: lote.numero_lote,
             produto: lote.produto.nome,
@@ -115,19 +146,24 @@ export class DashboardService {
         }));
 
         return {
-            dataReferencia: `${dataReferencia.getFullYear()}-${String(
-                dataReferencia.getMonth() + 1
-            ).padStart(2, "0")}-${String(dataReferencia.getDate()).padStart(2, "0")}`,
+            periodo: {
+                dataInicial: `${startDate.getFullYear()}-${String(
+                    startDate.getMonth() + 1
+                ).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`,
+                dataFinal: `${endDate.getFullYear()}-${String(
+                    endDate.getMonth() + 1
+                ).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`,
+            },
             indicadores: {
-                lotesProduzidosHoje: lotesDaData.length,
-                unidadesProduzidasHoje: lotesDaData.reduce(
+                lotesProduzidosHoje: lotesDoPeriodo.length,
+                unidadesProduzidasHoje: lotesDoPeriodo.reduce(
                     (acc, lote) => acc + lote.quantidade_prod,
                     0
                 ),
                 taxaAprovacaoMes,
-                lotesAguardandoInspecao: lotesPendentesNaData,
+                lotesAguardandoInspecao: lotesPendentesNoPeriodo,
             },
-            ultimosLotes: lotesDaDataFormatados,
+            ultimosLotes: lotesDoPeriodoFormatados,
         };
     }
 }

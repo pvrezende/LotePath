@@ -15,16 +15,33 @@ export class DashboardService {
   private readonly apiUrl = environment.apiUrl;
 
   getDashboard(
-    data?: string
+    dataInicial?: string,
+    dataFinal?: string
   ): Observable<{
-    dataReferencia: string;
+    periodo: {
+      dataInicial: string;
+      dataFinal: string;
+    };
     indicadores: DashboardIndicadores;
     ultimosLotes: DashboardLote[];
   }> {
-    const query = data ? `?data=${encodeURIComponent(data)}` : '';
+    const params = new URLSearchParams();
+
+    if (dataInicial) {
+      params.set('dataInicial', dataInicial);
+    }
+
+    if (dataFinal) {
+      params.set('dataFinal', dataFinal);
+    }
+
+    const query = params.toString() ? `?${params.toString()}` : '';
 
     return this.http.get<{
-      dataReferencia: string;
+      periodo: {
+        dataInicial: string;
+        dataFinal: string;
+      };
       indicadores: DashboardIndicadores;
       ultimosLotes: DashboardLote[];
     }>(`${this.apiUrl}/dashboard${query}`);
