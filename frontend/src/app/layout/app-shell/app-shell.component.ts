@@ -95,6 +95,14 @@ import { AuthService } from '../../core/services/auth.service';
   `,
   styles: [
     `
+      :host {
+        display: block;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       .app-shell {
         min-height: 100vh;
         background: #f3f6fb;
@@ -129,12 +137,13 @@ import { AuthService } from '../../core/services/auth.service';
 
       .brand-text h1 {
         font-size: 30px;
-        margin-bottom: 4px;
+        margin: 0 0 4px;
         color: #0f172a;
         line-height: 1.1;
       }
 
       .brand-text p {
+        margin: 0;
         color: #64748b;
         font-size: 14px;
         line-height: 1.4;
@@ -143,15 +152,22 @@ import { AuthService } from '../../core/services/auth.service';
       .nav-menu {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         flex-wrap: wrap;
       }
 
       .nav-menu a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
         padding: 10px 14px;
         border-radius: 10px;
         color: #475569;
         font-weight: 600;
+        font-size: 14px;
+        line-height: 1.2;
+        text-align: center;
         transition: 0.2s ease;
         white-space: nowrap;
       }
@@ -178,20 +194,30 @@ import { AuthService } from '../../core/services/auth.service';
         flex-direction: column;
         align-items: flex-end;
         line-height: 1.2;
+        min-width: 0;
       }
 
       .user-info strong {
         color: #0f172a;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .user-info span {
         font-size: 13px;
         color: #64748b;
         text-transform: capitalize;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       button {
         height: 42px;
+        min-width: 72px;
         padding: 0 18px;
         border: none;
         border-radius: 10px;
@@ -224,10 +250,20 @@ import { AuthService } from '../../core/services/auth.service';
         font-size: 14px;
       }
 
+      @media (max-width: 1024px) {
+        .topbar {
+          padding: 16px 20px;
+        }
+
+        .content {
+          padding: 24px 20px;
+        }
+      }
+
       @media (max-width: 900px) {
         .topbar-main {
-          align-items: flex-start;
           flex-direction: column;
+          align-items: flex-start;
         }
 
         .topbar-actions {
@@ -238,11 +274,16 @@ import { AuthService } from '../../core/services/auth.service';
         .user-info {
           align-items: flex-start;
         }
+
+        .user-info strong,
+        .user-info span {
+          max-width: 100%;
+        }
       }
 
       @media (max-width: 640px) {
         .topbar {
-          padding: 16px;
+          padding: 14px 16px;
           gap: 12px;
         }
 
@@ -255,12 +296,19 @@ import { AuthService } from '../../core/services/auth.service';
         }
 
         .nav-menu {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: 100%;
           gap: 8px;
         }
 
         .nav-menu a {
-          padding: 9px 12px;
-          font-size: 14px;
+          min-width: 0;
+          width: 100%;
+          padding: 10px 8px;
+          font-size: 13px;
+          white-space: normal;
+          word-break: break-word;
         }
 
         .topbar-actions {
@@ -293,30 +341,45 @@ import { AuthService } from '../../core/services/auth.service';
 
       @media (max-width: 420px) {
         .nav-menu {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          width: 100%;
-        }
-
-        .nav-menu a {
-          text-align: center;
+          grid-template-columns: 1fr 1fr;
         }
 
         .topbar-actions {
-          flex-direction: row;
           align-items: center;
         }
 
         .user-info {
+          flex: 1;
           min-width: 0;
         }
 
         .user-info strong,
         .user-info span {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 180px;
+          max-width: 100%;
+        }
+
+        button {
+          min-width: 64px;
+          padding: 0 12px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .nav-menu {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .user-info {
+          align-items: flex-start;
+        }
+
+        button {
+          width: 100%;
         }
       }
     `,

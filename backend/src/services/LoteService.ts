@@ -2,7 +2,7 @@ import { DataSource, Repository } from "typeorm";
 import { Lote } from "../entities/Lote.js";
 import { Produto } from "../entities/Produto.js";
 import { Usuario } from "../entities/Usuario.js";
-import { CreateLoteDTO, UpdateStatusLoteDTO } from "../dtos/LoteDTO.js";
+import { CreateLoteDTO, UpdateLoteDTO, UpdateStatusLoteDTO } from "../dtos/LoteDTO.js";
 import { AppError } from "../errors/AppError.js";
 
 export class LoteService {
@@ -60,7 +60,7 @@ export class LoteService {
         const lote = this.loteRepo.create({
             numero_lote,
             produto,
-            data_producao: new Date(data.data_producao),
+            data_producao: data.data_producao as any,
             turno: data.turno,
             operador,
             quantidade_prod: data.quantidade_prod,
@@ -105,6 +105,36 @@ export class LoteService {
         }
 
         return lote;
+    }
+
+    async update(id: string, data: UpdateLoteDTO) {
+        const lote = await this.getById(id);
+
+        const produto = await this.produtoRepo.findOneBy({ id: data.produtoId });
+
+        if (!produto) {
+            throw new AppError("Produto não encontrado", 404);
+        }
+
+        if (!produto.ativo) {
+            throw new AppError("Produto inativo não pode ser usado no lote", 400);
+        }
+
+        lote.produto = produto;
+        lote.data_producao = data.data_producao as any;
+        lote.turno = data.turno;
+        lote.quantidade_prod = data.quantidade_prod;
+        lote.observacoes = data.observacoes ?? null;
+
+        await this.loteRepo.save(lote);
+
+        return this.getById(id);
+    }
+
+    async delete(id: string) {
+        const lote = await this.getById(id);
+
+        await this.loteRepo.remove(lote);
     }
 
     async updateStatus(id: string, data: UpdateStatusLoteDTO) {

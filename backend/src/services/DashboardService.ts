@@ -8,13 +8,48 @@ export class DashboardService {
         this.loteRepo = appDataSource.getRepository(Lote);
     }
 
+    private formatDate(dateValue: string | Date): string {
+        const raw = String(dateValue).slice(0, 10);
+        const [year, month, day] = raw.split("-");
+
+        if (!year || !month || !day) {
+            return String(dateValue);
+        }
+
+        return `${day}/${month}/${year}`;
+    }
+
+    private isSameDay(dateValue: string | Date, reference: Date): boolean {
+        const raw = String(dateValue).slice(0, 10);
+        const [year, month, day] = raw.split("-").map(Number);
+
+        if (!year || !month || !day) {
+            return false;
+        }
+
+        return (
+            year === reference.getFullYear() &&
+            month === reference.getMonth() + 1 &&
+            day === reference.getDate()
+        );
+    }
+
+    private isSameMonth(dateValue: string | Date, reference: Date): boolean {
+        const raw = String(dateValue).slice(0, 10);
+        const [year, month] = raw.split("-").map(Number);
+
+        if (!year || !month) {
+            return false;
+        }
+
+        return (
+            year === reference.getFullYear() &&
+            month === reference.getMonth() + 1
+        );
+    }
+
     async getDashboard() {
         const hoje = new Date();
-        const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-        const fimHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
-
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
 
         const lotes = await this.loteRepo.find({
             relations: {
@@ -27,19 +62,22 @@ export class DashboardService {
             },
         });
 
-        const lotesHoje = lotes.filter((lote) => {
-            const data = new Date(lote.data_producao);
-            return data >= inicioHoje && data < fimHoje;
-        });
+        const lotesHoje = lotes.filter((lote) =>
+            this.isSameDay(lote.data_producao, hoje)
+        );
 
         const lotesMesInspecionados = lotes.filter((lote) => {
-            const data = new Date(lote.data_producao);
             const statusInspecionados = ["aprovado", "aprovado_restricao", "reprovado"];
-            return data >= inicioMes && data < fimMes && statusInspecionados.includes(lote.status);
+            return (
+                this.isSameMonth(lote.data_producao, hoje) &&
+                statusInspecionados.includes(lote.status)
+            );
         });
 
         const lotesAprovadosMes = lotesMesInspecionados.filter(
-            (lote) => lote.status === "aprovado"
+            (lote) =>
+                lote.status === "aprovado" ||
+                lote.status === "aprovado_restricao"
         ).length;
 
         const taxaAprovacaoMes =
@@ -52,7 +90,7 @@ export class DashboardService {
             numero_lote: lote.numero_lote,
             produto: lote.produto.nome,
             operador: lote.operador.nome,
-            data_producao: new Date(lote.data_producao).toLocaleDateString("pt-BR"),
+            data_producao: this.formatDate(lote.data_producao),
             status: lote.status,
         }));
 

@@ -30,7 +30,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       <div class="content-grid">
         <section class="form-card">
-          <h3>Novo lote</h3>
+          <h3>{{ editingLoteId ? 'Editar lote' : 'Novo lote' }}</h3>
 
           <form [formGroup]="loteForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
@@ -90,9 +90,27 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <div class="alert success">{{ successMessage }}</div>
             }
 
-            <button type="submit" [disabled]="saving">
-              {{ saving ? 'Salvando...' : 'Abrir lote' }}
-            </button>
+            <div class="form-actions">
+              <button type="submit" [disabled]="saving">
+                {{
+                  saving
+                    ? 'Salvando...'
+                    : editingLoteId
+                    ? 'Salvar alterações'
+                    : 'Abrir lote'
+                }}
+              </button>
+
+              @if (editingLoteId) {
+                <button
+                  type="button"
+                  class="secondary-btn"
+                  (click)="cancelEdit()"
+                >
+                  Cancelar edição
+                </button>
+              }
+            </div>
           </form>
         </section>
 
@@ -118,10 +136,11 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                   </div>
 
                   <div class="mobile-lote-info">
-                    <span><b>Produto:</b> {{ lote.produto.nome }}</span>
-                    <span><b>Turno:</b> {{ formatTurno(lote.turno) }}</span>
-                    <span><b>Quantidade:</b> {{ lote.quantidade_prod }}</span>
-                  </div>
+                  <span><b>Produto:</b> {{ lote.produto.nome }}</span>
+                  <span><b>Data:</b> {{ formatDate(lote.data_producao) }}</span>
+                  <span><b>Turno:</b> {{ formatTurno(lote.turno) }}</span>
+                  <span><b>Quantidade:</b> {{ lote.quantidade_prod }}</span>
+                </div>
 
                   <div class="mobile-lote-actions">
                     <button
@@ -131,6 +150,24 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                     >
                       Detalhes
                     </button>
+
+                    @if (isGestor) {
+                      <button
+                        type="button"
+                        class="edit-btn"
+                        (click)="startEdit(lote)"
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="delete-btn"
+                        (click)="deleteLote(lote)"
+                      >
+                        Excluir
+                      </button>
+                    }
                   </div>
                 </article>
               }
@@ -142,6 +179,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                   <tr>
                     <th>Número</th>
                     <th>Produto</th>
+                    <th>Data</th>
                     <th>Turno</th>
                     <th>Quantidade</th>
                     <th>Status</th>
@@ -153,19 +191,40 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                     <tr>
                       <td class="strong">{{ lote.numero_lote }}</td>
                       <td>{{ lote.produto.nome }}</td>
+                      <td>{{ formatDate(lote.data_producao) }}</td>
                       <td>{{ formatTurno(lote.turno) }}</td>
                       <td>{{ lote.quantidade_prod }}</td>
                       <td>
                         <app-status-badge [status]="lote.status" />
                       </td>
                       <td>
-                        <button
-                          type="button"
-                          class="details-btn"
-                          (click)="openDetails(lote)"
-                        >
-                          Detalhes
-                        </button>
+                        <div class="table-actions">
+                          <button
+                            type="button"
+                            class="details-btn"
+                            (click)="openDetails(lote)"
+                          >
+                            Detalhes
+                          </button>
+
+                          @if (isGestor) {
+                            <button
+                              type="button"
+                              class="edit-btn"
+                              (click)="startEdit(lote)"
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              class="delete-btn"
+                              (click)="deleteLote(lote)"
+                            >
+                              Excluir
+                            </button>
+                          }
+                        </div>
                       </td>
                     </tr>
                   }
@@ -382,6 +441,28 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-size: 13px;
       }
 
+      .edit-btn {
+        background: #fef3c7;
+        color: #b45309;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
+      .delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
       .list-header {
         display: flex;
         align-items: center;
@@ -431,6 +512,12 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-weight: 800;
       }
 
+      .table-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
       .mobile-lote-card {
         background: #f8fafc;
         border: 1px solid #e5e7eb;
@@ -462,7 +549,8 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       .mobile-lote-actions {
         display: flex;
-        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
       .modal-backdrop {
@@ -634,6 +722,7 @@ export class LotesComponent implements OnInit {
   saving = false;
   errorMessage = '';
   successMessage = '';
+  editingLoteId: string | null = null;
 
   loteForm = this.fb.group({
     produtoId: ['', [Validators.required]],
@@ -642,6 +731,10 @@ export class LotesComponent implements OnInit {
     quantidade_prod: [null as number | null, [Validators.required, Validators.min(1)]],
     observacoes: [''],
   });
+
+  get isGestor(): boolean {
+    return this.authService.getUser()?.perfil === 'gestor';
+  }
 
   ngOnInit(): void {
     this.loadProdutos();
@@ -682,6 +775,69 @@ export class LotesComponent implements OnInit {
     this.selectedLote = null;
   }
 
+  startEdit(lote: Lote): void {
+    this.editingLoteId = lote.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.loteForm.patchValue({
+      produtoId: lote.produto.id,
+      data_producao: lote.data_producao,
+      turno: lote.turno,
+      quantidade_prod: lote.quantidade_prod,
+      observacoes: lote.observacoes ?? '',
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.editingLoteId = null;
+    this.loteForm.reset({
+      produtoId: '',
+      data_producao: '',
+      turno: '',
+      quantidade_prod: null,
+      observacoes: '',
+    });
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  deleteLote(lote: Lote): void {
+    if (!this.isGestor) return;
+
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir o lote ${lote.numero_lote}?`
+    );
+
+    if (!confirmed) return;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.loteService.deleteLote(lote.id).subscribe({
+      next: (response) => {
+        this.successMessage = response.message;
+        if (this.editingLoteId === lote.id) {
+          this.cancelEdit();
+        }
+        if (this.selectedLote?.id === lote.id) {
+          this.closeDetails();
+        }
+        this.loadLotes();
+      },
+      error: (error) => {
+        if (error.status === 403) {
+          this.errorMessage = 'Seu perfil não tem permissão para excluir lotes.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao excluir lote.';
+      },
+    });
+  }
+
   formatTurno(turno: string): string {
     const labels: Record<string, string> = {
       manha: 'Manhã',
@@ -693,7 +849,15 @@ export class LotesComponent implements OnInit {
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('pt-BR');
+    if (!date) return '';
+
+    const [year, month, day] = date.split('-');
+
+    if (!year || !month || !day) {
+      return date;
+    }
+
+    return `${day}/${month}/${year}`;
   }
 
   formatDateTime(date: string): string {
@@ -716,6 +880,38 @@ export class LotesComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
     this.successMessage = '';
+
+    if (this.editingLoteId) {
+      const updatePayload = {
+        produtoId: this.loteForm.value.produtoId ?? '',
+        data_producao: this.loteForm.value.data_producao ?? '',
+        turno: (this.loteForm.value.turno ?? '') as 'manha' | 'tarde' | 'noite',
+        quantidade_prod: this.loteForm.value.quantidade_prod ?? 0,
+        observacoes: this.loteForm.value.observacoes ?? '',
+      };
+
+      this.loteService.updateLote(this.editingLoteId, updatePayload).subscribe({
+        next: () => {
+          this.saving = false;
+          this.successMessage = 'Lote atualizado com sucesso.';
+          this.cancelEdit();
+          this.loadLotes();
+        },
+        error: (error) => {
+          this.saving = false;
+
+          if (error.status === 403) {
+            this.errorMessage =
+              'Seu perfil não tem permissão para editar lotes.';
+            return;
+          }
+
+          this.errorMessage = 'Erro ao atualizar lote.';
+        },
+      });
+
+      return;
+    }
 
     const payload = {
       produtoId: this.loteForm.value.produtoId ?? '',
