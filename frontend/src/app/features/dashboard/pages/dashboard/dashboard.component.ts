@@ -22,13 +22,22 @@ import { FormsModule } from '@angular/forms';
   ],
   template: `
     <section class="dashboard-page">
-      <div class="page-header">
-        <div>
-          <span class="eyebrow">PAINEL OPERACIONAL</span>
-          <h2>Dashboard de Produção</h2>
-          <p>
-            Acompanhe indicadores do período filtrado para monitorar o processo produtivo.
-          </p>
+      <div class="hero-card">
+        <div class="hero-content">
+          <div>
+            <span class="eyebrow">PAINEL OPERACIONAL</span>
+            <h2>Dashboard de Produção</h2>
+            <p>
+              Acompanhe indicadores do período filtrado para monitorar o processo
+              produtivo, a performance operacional e a situação dos lotes.
+            </p>
+          </div>
+
+          <div class="hero-highlight">
+            <span class="hero-label">Período em análise</span>
+            <strong>{{ formatDate(startDate) }}</strong>
+            <small>até {{ formatDate(endDate) }}</small>
+          </div>
         </div>
       </div>
 
@@ -36,7 +45,10 @@ import { FormsModule } from '@angular/forms';
         <div class="filter-header">
           <div>
             <h3>Filtro por período</h3>
-            <p>Por padrão, a dashboard abre com o intervalo do dia atual.</p>
+            <p>
+              Use os atalhos rápidos ou escolha manualmente a data inicial e a
+              data final para consultar a operação.
+            </p>
           </div>
         </div>
 
@@ -58,35 +70,32 @@ import { FormsModule } from '@angular/forms';
         <div class="filter-grid">
           <div class="form-group">
             <label for="dataInicial">Data inicial</label>
-            <input
-              id="dataInicial"
-              type="date"
-              [(ngModel)]="startDate"
-            />
+            <input id="dataInicial" type="date" [(ngModel)]="startDate" />
           </div>
 
           <div class="form-group">
             <label for="dataFinal">Data final</label>
-            <input
-              id="dataFinal"
-              type="date"
-              [(ngModel)]="endDate"
-            />
+            <input id="dataFinal" type="date" [(ngModel)]="endDate" />
           </div>
 
           <div class="filter-actions">
-            <button type="button" (click)="applyFilter()">Filtrar</button>
-            <button type="button" class="secondary-btn" (click)="resetFilter()">
+            <button type="button" class="primary-btn" (click)="applyFilter()">
+              Filtrar
+            </button>
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="resetFilter()"
+            >
               Limpar
             </button>
           </div>
         </div>
 
         <div class="filter-note">
+          <span class="filter-note-dot"></span>
           <span>
-            Exibindo dados de:
-            <strong>{{ formatDate(startDate) }}</strong>
-            até
+            Exibindo dados de <strong>{{ formatDate(startDate) }}</strong> até
             <strong>{{ formatDate(endDate) }}</strong>
           </span>
         </div>
@@ -104,22 +113,41 @@ import { FormsModule } from '@angular/forms';
         </div>
       } @else {
         <div class="stats-grid">
-          <app-stat-card
-            label="Lotes produzidos no período"
-            [value]="indicadores.lotesProduzidosHoje"
-          />
-          <app-stat-card
-            label="Unidades produzidas no período"
-            [value]="indicadores.unidadesProduzidasHoje"
-          />
-          <app-stat-card
-            label="Taxa de aprovação do mês"
-            [value]="indicadores.taxaAprovacaoMes + '%'"
-          />
-          <app-stat-card
-            label="Lotes pendentes no período"
-            [value]="indicadores.lotesAguardandoInspecao"
-          />
+          <article class="stat-panel">
+            <div class="stat-top">
+              <span class="stat-label">Lotes produzidos</span>
+              <span class="stat-icon">📦</span>
+            </div>
+            <strong class="stat-value">{{ indicadores.lotesProduzidosHoje }}</strong>
+            <small class="stat-caption">No período selecionado</small>
+          </article>
+
+          <article class="stat-panel">
+            <div class="stat-top">
+              <span class="stat-label">Unidades produzidas</span>
+              <span class="stat-icon">🏭</span>
+            </div>
+            <strong class="stat-value">{{ indicadores.unidadesProduzidasHoje }}</strong>
+            <small class="stat-caption">Volume total produzido</small>
+          </article>
+
+          <article class="stat-panel">
+            <div class="stat-top">
+              <span class="stat-label">Taxa de aprovação</span>
+              <span class="stat-icon">✅</span>
+            </div>
+            <strong class="stat-value">{{ indicadores.taxaAprovacaoMes }}%</strong>
+            <small class="stat-caption">Com base no mês de referência</small>
+          </article>
+
+          <article class="stat-panel">
+            <div class="stat-top">
+              <span class="stat-label">Lotes pendentes</span>
+              <span class="stat-icon">⏳</span>
+            </div>
+            <strong class="stat-value">{{ indicadores.lotesAguardandoInspecao }}</strong>
+            <small class="stat-caption">Aguardando inspeção no período</small>
+          </article>
         </div>
 
         <section class="table-section">
@@ -127,9 +155,7 @@ import { FormsModule } from '@angular/forms';
             <div>
               <h3>Lotes do período filtrado</h3>
               <p>
-                Lotes encontrados entre
-                {{ formatDate(startDate) }}
-                e
+                Lotes encontrados entre {{ formatDate(startDate) }} e
                 {{ formatDate(endDate) }}.
               </p>
             </div>
@@ -140,7 +166,7 @@ import { FormsModule } from '@angular/forms';
           </div>
 
           @if (ultimosLotes.length > 0) {
-            <div class="table-wrapper">
+            <div class="table-wrapper desktop-table">
               <table>
                 <thead>
                   <tr>
@@ -166,6 +192,23 @@ import { FormsModule } from '@angular/forms';
                 </tbody>
               </table>
             </div>
+
+            <div class="mobile-lote-list">
+              @for (lote of ultimosLotes; track lote.id) {
+                <article class="mobile-lote-card">
+                  <div class="mobile-lote-head">
+                    <strong>{{ lote.numero_lote }}</strong>
+                    <app-status-badge [status]="lote.status" />
+                  </div>
+
+                  <div class="mobile-lote-body">
+                    <span><b>Produto:</b> {{ lote.produto }}</span>
+                    <span><b>Operador:</b> {{ lote.operador }}</span>
+                    <span><b>Data:</b> {{ lote.data_producao }}</span>
+                  </div>
+                </article>
+              }
+            </div>
           } @else {
             <app-empty-state
               title="Nenhum lote encontrado"
@@ -184,58 +227,142 @@ import { FormsModule } from '@angular/forms';
         gap: 24px;
       }
 
-      .page-header {
+      .hero-card,
+      .filter-card,
+      .table-section,
+      .feedback-box {
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 24px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+
+      .hero-card {
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 32%),
+          radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.08), transparent 28%);
+        pointer-events: none;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
+        gap: 20px;
       }
 
       .eyebrow {
-        display: inline-block;
-        margin-bottom: 10px;
+        display: inline-flex;
+        margin-bottom: 12px;
         font-size: 12px;
         font-weight: 800;
         letter-spacing: 0.08em;
         color: #2563eb;
       }
 
-      .page-header h2 {
-        font-size: 32px;
-        margin-bottom: 8px;
+      .hero-card h2 {
+        font-size: 38px;
+        line-height: 1.05;
+        margin: 0 0 10px;
         color: #0f172a;
+        letter-spacing: -0.03em;
       }
 
-      .page-header p {
+      .hero-card p {
+        max-width: 760px;
+        color: #64748b;
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      .hero-highlight {
+        min-width: 220px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+      }
+
+      .hero-label {
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #2563eb;
+      }
+
+      .hero-highlight strong {
+        font-size: 24px;
+        color: #0f172a;
+        line-height: 1.1;
+      }
+
+      .hero-highlight small {
+        color: #475569;
+        font-size: 13px;
+      }
+
+      .filter-card,
+      .table-section,
+      .feedback-box {
+        padding: 24px;
+      }
+
+      .filter-header h3,
+      .section-header h3 {
+        margin: 0 0 4px;
+        font-size: 22px;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+      }
+
+      .filter-header p,
+      .section-header p {
+        margin: 0;
         color: #64748b;
         line-height: 1.6;
-        max-width: 760px;
-      }
-
-      .filter-card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
-      }
-
-      .filter-header h3 {
-        margin-bottom: 4px;
-        font-size: 20px;
-        color: #0f172a;
-      }
-
-      .filter-header p {
-        color: #64748b;
       }
 
       .quick-filters {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-top: 18px;
-        margin-bottom: 18px;
+        margin: 18px 0;
+      }
+
+      .quick-btn {
+        height: 40px;
+        padding: 0 14px;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .quick-btn:hover {
+        background: #dbeafe;
+        transform: translateY(-1px);
       }
 
       .filter-grid {
@@ -251,22 +378,24 @@ import { FormsModule } from '@angular/forms';
 
       label {
         display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
+        margin-bottom: 7px;
+        font-weight: 700;
         color: #334155;
       }
 
       input {
         width: 100%;
         border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 12px 14px;
+        border-radius: 12px;
+        padding: 13px 14px;
         outline: none;
         background: #fff;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus {
         border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
       }
 
       .filter-actions {
@@ -275,37 +404,52 @@ import { FormsModule } from '@angular/forms';
         flex-wrap: wrap;
       }
 
-      button {
+      .primary-btn,
+      .secondary-btn {
         height: 44px;
-        padding: 0 16px;
-        border: none;
-        border-radius: 10px;
-        background: #2563eb;
-        color: white;
+        padding: 0 18px;
+        border-radius: 12px;
         font-weight: 700;
         cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-1px);
       }
 
       .secondary-btn {
-        background: #e2e8f0;
+        background: #f1f5f9;
         color: #0f172a;
+        border: 1px solid #e2e8f0;
       }
 
-      .quick-btn {
-        height: 40px;
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-      }
-
-      .quick-btn:hover {
-        background: #dbeafe;
+      .secondary-btn:hover {
+        background: #e2e8f0;
       }
 
       .filter-note {
         margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
         color: #475569;
         font-size: 14px;
+      }
+
+      .filter-note-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #2563eb;
+        box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+        flex-shrink: 0;
       }
 
       .stats-grid {
@@ -314,12 +458,46 @@ import { FormsModule } from '@angular/forms';
         gap: 16px;
       }
 
-      .table-section {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+      .stat-panel {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+      }
+
+      .stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        font-weight: 800;
+        color: #64748b;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .stat-icon {
+        font-size: 18px;
+      }
+
+      .stat-value {
+        display: block;
+        font-size: 42px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: #0f172a;
+        margin-bottom: 10px;
+      }
+
+      .stat-caption {
+        color: #64748b;
+        font-size: 14px;
       }
 
       .section-header {
@@ -330,31 +508,33 @@ import { FormsModule } from '@angular/forms';
         margin-bottom: 18px;
       }
 
-      .section-header h3 {
-        margin-bottom: 4px;
-        font-size: 22px;
-        color: #0f172a;
-      }
-
-      .section-header p {
-        color: #64748b;
-      }
-
       .section-chip {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 8px 12px;
+        min-height: 34px;
+        padding: 0 12px;
         border-radius: 999px;
         background: #eff6ff;
         color: #1d4ed8;
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 800;
         white-space: nowrap;
       }
 
       .table-wrapper {
         overflow-x: auto;
+        border-radius: 18px;
+      }
+
+      .desktop-table {
+        display: block;
+      }
+
+      .mobile-lote-list {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
       }
 
       table {
@@ -365,15 +545,17 @@ import { FormsModule } from '@angular/forms';
       th,
       td {
         text-align: left;
-        padding: 16px 12px;
+        padding: 16px 14px;
         border-bottom: 1px solid #e5e7eb;
         vertical-align: middle;
       }
 
       th {
-        font-size: 13px;
+        font-size: 12px;
         color: #64748b;
         font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
 
       td {
@@ -389,12 +571,32 @@ import { FormsModule } from '@angular/forms';
         font-weight: 800;
       }
 
-      .feedback-box {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
+      .mobile-lote-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         border-radius: 18px;
-        padding: 28px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mobile-lote-head {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .mobile-lote-body {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        color: #334155;
+        font-size: 14px;
+      }
+
+      .feedback-box {
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
       }
 
       .feedback-box.error {
@@ -404,7 +606,11 @@ import { FormsModule } from '@angular/forms';
       }
 
       .feedback-box.error h3 {
-        margin-bottom: 8px;
+        margin: 0 0 8px;
+      }
+
+      .feedback-box.error p {
+        margin: 0;
       }
 
       .loading-line {
@@ -428,11 +634,18 @@ import { FormsModule } from '@angular/forms';
         }
       }
 
-      @media (max-width: 1100px) {
+      @media (max-width: 1180px) {
+        .hero-content {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .stats-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+      }
 
+      @media (max-width: 980px) {
         .filter-grid {
           grid-template-columns: 1fr 1fr;
         }
@@ -443,6 +656,18 @@ import { FormsModule } from '@angular/forms';
       }
 
       @media (max-width: 720px) {
+        .hero-card,
+        .filter-card,
+        .table-section,
+        .feedback-box {
+          padding: 18px;
+          border-radius: 20px;
+        }
+
+        .hero-card h2 {
+          font-size: 30px;
+        }
+
         .section-header {
           flex-direction: column;
           align-items: flex-start;
@@ -451,6 +676,14 @@ import { FormsModule } from '@angular/forms';
         .filter-grid {
           grid-template-columns: 1fr;
         }
+
+        .desktop-table {
+          display: none;
+        }
+
+        .mobile-lote-list {
+          display: flex;
+        }
       }
 
       @media (max-width: 640px) {
@@ -458,13 +691,16 @@ import { FormsModule } from '@angular/forms';
           grid-template-columns: 1fr;
         }
 
-        .page-header h2 {
-          font-size: 28px;
+        .stat-value {
+          font-size: 34px;
         }
 
-        .table-section,
-        .filter-card {
-          padding: 18px;
+        .quick-filters {
+          gap: 8px;
+        }
+
+        .quick-btn {
+          flex: 1 1 140px;
         }
       }
     `,

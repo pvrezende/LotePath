@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import {
   Router,
   RouterLink,
@@ -15,81 +15,129 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="app-shell">
       <header class="topbar">
-        <div class="topbar-main">
-          <div class="brand-area">
-            <div class="brand-text">
-              <h1>LotePath</h1>
-              <p>Sistema de rastreamento por lotes</p>
+        <div class="topbar-inner">
+          <div class="topbar-main">
+            <button
+              type="button"
+              class="mobile-menu-btn"
+              (click)="toggleMobileMenu()"
+              [attr.aria-expanded]="mobileMenuOpen"
+              aria-label="Abrir menu"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+
+            <div class="brand-area">
+              <div class="brand-mark">
+                <span class="brand-mark-core"></span>
+              </div>
+
+              <div class="brand-text">
+                <h1>LotePath</h1>
+                <p>Sistema de rastreamento por lotes</p>
+              </div>
+            </div>
+
+            <div class="topbar-actions desktop-user-area">
+              <div class="user-info">
+                <small class="user-label">Usuário logado</small>
+                <strong>{{ userName }}</strong>
+                <span>{{ userPerfil }}</span>
+              </div>
+
+              <button type="button" class="logout-btn" (click)="logout()">
+                Sair
+              </button>
             </div>
           </div>
 
-          <div class="topbar-actions">
-            <div class="user-info">
-              <strong>{{ userName }}</strong>
-              <span>{{ userPerfil }}</span>
-            </div>
+          <div class="topbar-divider"></div>
 
-            <button type="button" (click)="logout()">Sair</button>
+          <div class="nav-wrapper" [class.mobile-open]="mobileMenuOpen">
+            <nav class="nav-menu">
+              <a
+                routerLink="/app/dashboard"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Dashboard
+              </a>
+
+              <a
+                routerLink="/app/produtos"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Produtos
+              </a>
+
+              <a
+                routerLink="/app/lotes"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Lotes
+              </a>
+
+              <a
+                routerLink="/app/insumos"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Insumos
+              </a>
+
+              <a
+                routerLink="/app/inspecao"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Inspeção
+              </a>
+
+              <a
+                routerLink="/app/rastreabilidade"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+              >
+                Rastreabilidade
+              </a>
+            </nav>
+
+            <div class="topbar-actions mobile-user-area">
+              <div class="user-info">
+                <small class="user-label">Usuário logado</small>
+                <strong>{{ userName }}</strong>
+                <span>{{ userPerfil }}</span>
+              </div>
+
+              <button type="button" class="logout-btn" (click)="logout()">
+                Sair
+              </button>
+            </div>
           </div>
         </div>
-
-        <nav class="nav-menu">
-          <a
-            routerLink="/app/dashboard"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Dashboard
-          </a>
-
-          <a
-            routerLink="/app/produtos"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Produtos
-          </a>
-
-          <a
-            routerLink="/app/lotes"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Lotes
-          </a>
-
-          <a
-            routerLink="/app/insumos"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Insumos
-          </a>
-
-          <a
-            routerLink="/app/inspecao"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Inspeção
-          </a>
-
-          <a
-            routerLink="/app/rastreabilidade"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Rastreabilidade
-          </a>
-        </nav>
       </header>
 
-      <main class="content">
-        <router-outlet />
+      <main class="content-area">
+        <div class="content-shell">
+          <router-outlet />
+        </div>
       </main>
 
       <footer class="footer">
-        <p>Projeto acadêmico INDT • LotePath • Frontend Angular</p>
+        <div class="footer-inner">
+          <p>Projeto acadêmico INDT • LotePath • Frontend Angular</p>
+          <span class="footer-badge">Controle produtivo e rastreabilidade</span>
+        </div>
       </footer>
     </div>
   `,
@@ -99,54 +147,94 @@ import { AuthService } from '../../core/services/auth.service';
         display: block;
       }
 
-      * {
-        box-sizing: border-box;
-      }
-
       .app-shell {
         min-height: 100vh;
-        background: #f3f6fb;
         display: flex;
         flex-direction: column;
       }
 
       .topbar {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 18px 24px;
-        background: #ffffff;
-        border-bottom: 1px solid #e5e7eb;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        position: relative;
+        z-index: 1;
+        padding: 18px 20px 0;
       }
 
-      .topbar-main {
+      .topbar-inner {
+        max-width: 1480px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 26px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+        padding: 18px 22px 16px;
+      }
+            .topbar-main {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 20px;
       }
 
+      .topbar-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(226, 232, 240, 0) 0%,
+          rgba(226, 232, 240, 1) 20%,
+          rgba(226, 232, 240, 1) 80%,
+          rgba(226, 232, 240, 0) 100%
+        );
+        margin: 16px 0 14px;
+      }
+
       .brand-area {
         display: flex;
         align-items: center;
+        gap: 14px;
         min-width: 0;
       }
 
+      .brand-mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2563eb 0%, #0f4fd6 100%);
+        position: relative;
+        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+        flex-shrink: 0;
+      }
+
+      .brand-mark-core {
+        position: absolute;
+        inset: 12px;
+        border-radius: 12px;
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 50%),
+          rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+      }
+
       .brand-text h1 {
+        margin: 0 0 2px;
         font-size: 30px;
-        margin: 0 0 4px;
+        line-height: 1.05;
+        font-weight: 800;
         color: #0f172a;
-        line-height: 1.1;
+        letter-spacing: -0.03em;
       }
 
       .brand-text p {
         margin: 0;
         color: #64748b;
         font-size: 14px;
-        line-height: 1.4;
+        line-height: 1.45;
+      }
+
+      .nav-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
       }
 
       .nav-menu {
@@ -160,131 +248,264 @@ import { AuthService } from '../../core/services/auth.service';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 40px;
-        padding: 10px 14px;
-        border-radius: 10px;
+        min-height: 42px;
+        padding: 10px 15px;
+        border-radius: 12px;
         color: #475569;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 14px;
-        line-height: 1.2;
-        text-align: center;
-        transition: 0.2s ease;
+        transition:
+          background-color 0.2s ease,
+          color 0.2s ease,
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
         white-space: nowrap;
       }
 
       .nav-menu a:hover {
         background: #eff6ff;
         color: #1d4ed8;
+        transform: translateY(-1px);
       }
 
       .active-link {
-        background: #dbeafe;
+        background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
         color: #1d4ed8 !important;
+        box-shadow: inset 0 0 0 1px #bfdbfe;
       }
 
       .topbar-actions {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
+      }
+
+      .desktop-user-area {
         flex-shrink: 0;
+      }
+
+      .mobile-user-area {
+        display: none;
       }
 
       .user-info {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
-        line-height: 1.2;
         min-width: 0;
+        line-height: 1.2;
+      }
+
+      .user-label {
+        margin-bottom: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #94a3b8;
       }
 
       .user-info strong {
         color: #0f172a;
-        max-width: 220px;
+        font-size: 15px;
+        max-width: 240px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .user-info span {
-        font-size: 13px;
         color: #64748b;
+        font-size: 13px;
         text-transform: capitalize;
-        max-width: 220px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
 
-      button {
-        height: 42px;
-        min-width: 72px;
+      .logout-btn {
+        min-width: 76px;
+        height: 44px;
         padding: 0 18px;
-        border: none;
-        border-radius: 10px;
-        background: #dc2626;
-        color: white;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #ffffff;
         font-weight: 700;
         cursor: pointer;
-        transition: 0.2s ease;
-        white-space: nowrap;
+        box-shadow: 0 10px 22px rgba(220, 38, 38, 0.18);
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease,
+          filter 0.18s ease;
       }
 
-      button:hover {
-        background: #b91c1c;
+      .logout-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 26px rgba(220, 38, 38, 0.24);
+        filter: saturate(1.02);
       }
 
-      .content {
+      .mobile-menu-btn {
+        display: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+      }
+
+      .mobile-menu-btn span {
+        width: 18px;
+        height: 2px;
+        border-radius: 999px;
+        background: #0f172a;
+        display: block;
+      }
+
+      .content-area {
         flex: 1;
         width: 100%;
-        max-width: 1400px;
+        padding: 24px 20px 30px;
+      }
+
+      .content-shell {
+        max-width: 1480px;
         margin: 0 auto;
-        padding: 28px 24px;
       }
 
       .footer {
-        border-top: 1px solid #e5e7eb;
-        background: #ffffff;
-        padding: 16px 24px;
-        text-align: center;
+        padding: 0 20px 20px;
+      }
+
+      .footer-inner {
+        max-width: 1480px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 22px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+      }
+
+      .footer-inner p {
+        margin: 0;
         color: #64748b;
         font-size: 14px;
       }
 
-      @media (max-width: 1024px) {
-        .topbar {
-          padding: 16px 20px;
+      .footer-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1100px) {
+        .topbar-inner,
+        .footer-inner {
+          border-radius: 22px;
         }
 
-        .content {
-          padding: 24px 20px;
+        .brand-text h1 {
+          font-size: 28px;
         }
       }
 
       @media (max-width: 900px) {
+        .topbar {
+          padding: 14px 14px 0;
+        }
+
+        .topbar-inner {
+          padding: 16px 16px 14px;
+        }
+
+        .desktop-user-area {
+          display: none;
+        }
+
+        .mobile-menu-btn {
+          display: inline-flex;
+        }
+
         .topbar-main {
+          align-items: center;
+        }
+
+        .nav-wrapper {
+          display: none;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 14px;
+        }
+
+        .nav-wrapper.mobile-open {
+          display: flex;
+        }
+
+        .nav-menu {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .nav-menu a {
+          width: 100%;
+          white-space: normal;
+          text-align: center;
+          padding: 11px 12px;
+        }
+
+        .mobile-user-area {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 6px;
+          border-top: 1px solid #e2e8f0;
+        }
+
+        .mobile-user-area .user-info {
+          align-items: flex-start;
+        }
+
+        .content-area {
+          padding: 18px 14px 24px;
+        }
+
+        .footer {
+          padding: 0 14px 14px;
+        }
+
+        .footer-inner {
           flex-direction: column;
           align-items: flex-start;
-        }
-
-        .topbar-actions {
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .user-info {
-          align-items: flex-start;
-        }
-
-        .user-info strong,
-        .user-info span {
-          max-width: 100%;
         }
       }
 
       @media (max-width: 640px) {
-        .topbar {
-          padding: 14px 16px;
-          gap: 12px;
+        .brand-mark {
+          width: 42px;
+          height: 42px;
+          border-radius: 14px;
+        }
+
+        .brand-mark-core {
+          inset: 10px;
+          border-radius: 10px;
         }
 
         .brand-text h1 {
@@ -296,90 +517,34 @@ import { AuthService } from '../../core/services/auth.service';
         }
 
         .nav-menu {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          width: 100%;
-          gap: 8px;
+          grid-template-columns: 1fr 1fr;
         }
 
-        .nav-menu a {
-          min-width: 0;
-          width: 100%;
-          padding: 10px 8px;
-          font-size: 13px;
+        .footer-badge {
           white-space: normal;
-          word-break: break-word;
-        }
-
-        .topbar-actions {
-          gap: 12px;
-        }
-
-        .user-info strong {
-          font-size: 14px;
-        }
-
-        .user-info span {
-          font-size: 12px;
-        }
-
-        button {
-          height: 40px;
-          padding: 0 14px;
-          font-size: 14px;
-        }
-
-        .content {
-          padding: 18px 14px;
-        }
-
-        .footer {
-          padding: 14px 16px;
-          font-size: 13px;
+          text-align: center;
+          min-height: auto;
+          padding: 8px 12px;
         }
       }
 
       @media (max-width: 420px) {
         .nav-menu {
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .topbar-actions {
-          align-items: center;
-        }
-
-        .user-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .user-info strong,
-        .user-info span {
-          max-width: 100%;
-        }
-
-        button {
-          min-width: 64px;
-          padding: 0 12px;
-        }
-      }
-
-      @media (max-width: 360px) {
-        .nav-menu {
           grid-template-columns: 1fr;
         }
 
-        .topbar-actions {
+        .mobile-user-area {
           flex-direction: column;
           align-items: stretch;
+          gap: 10px;
         }
 
-        .user-info {
-          align-items: flex-start;
-        }
-
-        button {
+        .mobile-user-area .logout-btn {
           width: 100%;
+        }
+
+        .footer-inner p {
+          font-size: 13px;
         }
       }
     `,
@@ -389,6 +554,8 @@ export class AppShellComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  mobileMenuOpen = false;
+
   readonly user = this.authService.getUser();
 
   get userName(): string {
@@ -397,6 +564,21 @@ export class AppShellComponent {
 
   get userPerfil(): string {
     return this.user?.perfil ?? 'perfil';
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth > 900 && this.mobileMenuOpen) {
+      this.mobileMenuOpen = false;
+    }
   }
 
   logout(): void {
