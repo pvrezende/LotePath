@@ -8,6 +8,7 @@ import { Lote } from '../../models/lote.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-lotes',
@@ -17,6 +18,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <section class="lotes-page">
@@ -355,6 +357,18 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
           </div>
         </div>
       }
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir lote"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação de gestor"
+        confirmText="Excluir lote"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteLote()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -865,6 +879,9 @@ export class LotesComponent implements OnInit {
   lotes: Lote[] = [];
   selectedLote: Lote | null = null;
   editingLoteId: string | null = null;
+  lotePendingDelete: Lote | null = null;
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
   loading = true;
   saving = false;
@@ -1010,14 +1027,25 @@ export class LotesComponent implements OnInit {
   deleteLote(lote: Lote): void {
     if (!this.isGestor) return;
 
-    const confirmed = window.confirm(
-      `Tem certeza que deseja excluir o lote ${lote.numero_lote}?`
-    );
+    this.lotePendingDelete = lote;
+    this.confirmDialogMessage = `Tem certeza que deseja excluir o lote ${lote.numero_lote}? Essa ação não poderá ser desfeita.`;
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmed) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.lotePendingDelete = null;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteLote(): void {
+    if (!this.lotePendingDelete || !this.isGestor) return;
+
+    const lote = this.lotePendingDelete;
 
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.loteService.deleteLote(lote.id).subscribe({
       next: (response: any) => {

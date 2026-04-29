@@ -4,11 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { Usuario, UsuarioPerfil } from '../../models/usuario.model';
 import { UsuarioService } from '../../services/usuario.service';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent],
+  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent, ConfirmDialogComponent],
   template: `
     <section class="usuarios-page">
       <div class="hero-card">
@@ -176,6 +177,17 @@ import { UsuarioService } from '../../services/usuario.service';
           }
         </section>
       </div>
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir usuário"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação irreversível"
+        confirmText="Excluir usuário"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteUsuario()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -512,6 +524,9 @@ export class UsuariosComponent implements OnInit {
 
   usuarios: Usuario[] = [];
   editingUserId: string | null = null;
+  userPendingDelete: Usuario | null = null;
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
   loading = true;
   saving = false;
@@ -641,14 +656,25 @@ export class UsuariosComponent implements OnInit {
   }
 
   deleteUsuario(usuario: Usuario): void {
-    const confirmed = window.confirm(
-      `Tem certeza que deseja excluir o usuário ${usuario.nome}?`
-    );
+    this.userPendingDelete = usuario;
+    this.confirmDialogMessage = `Tem certeza que deseja excluir o usuário ${usuario.nome}? Essa ação não poderá ser desfeita.`;
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmed) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.userPendingDelete = null;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteUsuario(): void {
+    if (!this.userPendingDelete) return;
+
+    const usuario = this.userPendingDelete;
 
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.usuarioService.deleteUsuario(usuario.id).subscribe({
       next: (response) => {

@@ -11,6 +11,7 @@ import { AuditTableComponent } from '../../../../shared/components/audit-table/a
 import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
 import { AuditLog } from '../../../auditoria/models/audit-log.model';
 import { PermissionService } from '../../../../core/services/permission.service';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-inspecao-lote',
@@ -21,6 +22,7 @@ import { PermissionService } from '../../../../core/services/permission.service'
     EmptyStateComponent,
     StatusBadgeComponent,
     AuditTableComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <section class="inspecao-page">
@@ -222,6 +224,18 @@ import { PermissionService } from '../../../../core/services/permission.service'
         [logs]="auditLogs"
         title="Auditoria de inspeções"
         description="Histórico de quem registrou ou excluiu inspeções dos lotes."
+      />
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir inspeção"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação restrita ao gestor"
+        confirmText="Excluir inspeção"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteInspecao()"
+        (cancel)="closeConfirmDialog()"
       />
     </section>
   `,
@@ -541,6 +555,8 @@ export class InspecaoLoteComponent implements OnInit {
   selectedLoteId = '';
   selectedLote: Lote | null = null;
   auditLogs: AuditLog[] = [];
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
   saving = false;
   deleting = false;
@@ -700,15 +716,23 @@ export class InspecaoLoteComponent implements OnInit {
   onDeleteInspecao(): void {
     if (!this.selectedLoteId || !this.canDeleteInspecao) return;
 
-    const confirmDelete = window.confirm(
-      'Tem certeza que deseja excluir esta inspeção?'
-    );
+    this.confirmDialogMessage =
+      'Tem certeza que deseja excluir esta inspeção? O lote voltará para aguardando inspeção e a ação será registrada na auditoria.';
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmDelete) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteInspecao(): void {
+    if (!this.selectedLoteId || !this.canDeleteInspecao) return;
 
     this.deleting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.inspecaoService.deleteInspecao(this.selectedLoteId).subscribe({
       next: (response) => {
@@ -735,3 +759,4 @@ export class InspecaoLoteComponent implements OnInit {
     });
   }
 }
+

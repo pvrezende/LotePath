@@ -9,6 +9,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 import { AuditTableComponent } from '../../../../shared/components/audit-table/audit-table.component';
 import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
 import { AuditLog } from '../../../auditoria/models/audit-log.model';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-insumos-lote',
@@ -19,6 +20,7 @@ import { AuditLog } from '../../../auditoria/models/audit-log.model';
     EmptyStateComponent,
     StatusBadgeComponent,
     AuditTableComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <section class="insumos-page">
@@ -222,6 +224,18 @@ import { AuditLog } from '../../../auditoria/models/audit-log.model';
         [logs]="auditLogs"
         title="Auditoria de insumos"
         description="Histórico de quem adicionou ou removeu insumos dos lotes."
+      />
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Remover insumo"
+        [message]="confirmDialogMessage"
+        eyebrow="Confirmação"
+        confirmText="Remover insumo"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmRemoveInsumo()"
+        (cancel)="closeConfirmDialog()"
       />
     </section>
   `,
@@ -540,6 +554,9 @@ export class InsumosLoteComponent implements OnInit {
   selectedLoteId = '';
   selectedLote: Lote | null = null;
   auditLogs: AuditLog[] = [];
+  insumoPendingDeleteId = '';
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
   saving = false;
   errorMessage = '';
@@ -671,14 +688,26 @@ export class InsumosLoteComponent implements OnInit {
   removeInsumo(insumoId: string): void {
     if (!this.selectedLoteId) return;
 
-    const confirmed = window.confirm(
-      'Tem certeza que deseja remover este insumo do lote?'
-    );
+    this.insumoPendingDeleteId = insumoId;
+    this.confirmDialogMessage =
+      'Tem certeza que deseja remover este insumo do lote? Essa movimentação ficará registrada na auditoria.';
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmed) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.insumoPendingDeleteId = '';
+    this.confirmDialogMessage = '';
+  }
+
+  confirmRemoveInsumo(): void {
+    if (!this.selectedLoteId || !this.insumoPendingDeleteId) return;
+
+    const insumoId = this.insumoPendingDeleteId;
 
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.insumoLoteService
       .removeInsumoFromLote(this.selectedLoteId, insumoId)
@@ -694,3 +723,4 @@ export class InsumosLoteComponent implements OnInit {
       });
   }
 }
+
