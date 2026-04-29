@@ -14,3 +14,10 @@ export interface CreateUsuarioRequest {
   senha: string;
   perfil: UsuarioPerfil;
 }
+
+export interface UpdateUsuarioRequest {
+  nome?: string;
+  email?: string;
+  senha?: string;
+  perfil?: UsuarioPerfil;
+}

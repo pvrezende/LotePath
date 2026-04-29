@@ -16,8 +16,7 @@ import { UsuarioService } from '../../services/usuario.service';
           <span class="eyebrow">GESTÃO DE ACESSOS</span>
           <h2>Usuários do sistema</h2>
           <p>
-            Crie usuários e defina o perfil de acesso. Apenas gestores podem
-            acessar esta área e cadastrar novos funcionários no sistema.
+            Crie, edite e exclua usuários. Apenas gestores podem acessar esta área.
           </p>
         </div>
 
@@ -32,11 +31,17 @@ import { UsuarioService } from '../../services/usuario.service';
         <section class="form-card">
           <div class="card-header">
             <div>
-              <h3>Novo usuário</h3>
-              <p>Informe os dados e selecione o tipo de usuário.</p>
+              <h3>{{ editingUserId ? 'Editar usuário' : 'Novo usuário' }}</h3>
+              <p>
+                {{
+                  editingUserId
+                    ? 'Atualize os dados do usuário selecionado.'
+                    : 'Informe os dados e selecione o tipo de usuário.'
+                }}
+              </p>
             </div>
 
-            <span class="card-chip">Gestor</span>
+            <span class="card-chip">{{ editingUserId ? 'Edição' : 'Gestor' }}</span>
           </div>
 
           <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
@@ -51,7 +56,12 @@ import { UsuarioService } from '../../services/usuario.service';
             </div>
 
             <div class="form-group">
-              <label for="senha">Senha</label>
+              <label for="senha">
+                Senha
+                @if (editingUserId) {
+                  <small>(deixe em branco para manter a atual)</small>
+                }
+              </label>
               <input id="senha" type="password" formControlName="senha" />
             </div>
 
@@ -73,9 +83,23 @@ import { UsuarioService } from '../../services/usuario.service';
               <div class="alert success">{{ successMessage }}</div>
             }
 
-            <button type="submit" class="primary-btn" [disabled]="saving">
-              {{ saving ? 'Salvando...' : 'Criar usuário' }}
-            </button>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn" [disabled]="saving">
+                {{
+                  saving
+                    ? 'Salvando...'
+                    : editingUserId
+                    ? 'Salvar alterações'
+                    : 'Criar usuário'
+                }}
+              </button>
+
+              @if (editingUserId) {
+                <button type="button" class="secondary-btn" (click)="cancelEdit()">
+                  Cancelar edição
+                </button>
+              }
+            </div>
           </form>
         </section>
 
@@ -83,7 +107,7 @@ import { UsuarioService } from '../../services/usuario.service';
           <div class="card-header">
             <div>
               <h3>Usuários cadastrados</h3>
-              <p>Consulte os acessos existentes no sistema.</p>
+              <p>Consulte e gerencie os acessos existentes no sistema.</p>
             </div>
 
             <button type="button" class="secondary-btn" (click)="loadUsuarios()">
@@ -105,6 +129,7 @@ import { UsuarioService } from '../../services/usuario.service';
                     <th>E-mail</th>
                     <th>Perfil</th>
                     <th>Criado em</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
 
@@ -119,6 +144,25 @@ import { UsuarioService } from '../../services/usuario.service';
                         </span>
                       </td>
                       <td>{{ formatDateTime(usuario.criado_em) }}</td>
+                      <td>
+                        <div class="table-actions">
+                          <button
+                            type="button"
+                            class="edit-btn"
+                            (click)="startEdit(usuario)"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-btn"
+                            (click)="deleteUsuario(usuario)"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -292,6 +336,12 @@ import { UsuarioService } from '../../services/usuario.service';
         margin-bottom: 14px;
       }
 
+      .form-group small {
+        margin-left: 6px;
+        color: #64748b;
+        font-weight: 600;
+      }
+
       label {
         display: block;
         margin-bottom: 6px;
@@ -316,9 +366,11 @@ import { UsuarioService } from '../../services/usuario.service';
       }
 
       .primary-btn,
-      .secondary-btn {
-        height: 44px;
-        padding: 0 16px;
+      .secondary-btn,
+      .edit-btn,
+      .delete-btn {
+        height: 40px;
+        padding: 0 14px;
         border-radius: 12px;
         border: none;
         font-weight: 700;
@@ -327,6 +379,7 @@ import { UsuarioService } from '../../services/usuario.service';
       }
 
       .primary-btn {
+        height: 44px;
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: white;
         box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
@@ -338,9 +391,21 @@ import { UsuarioService } from '../../services/usuario.service';
         border: 1px solid #e2e8f0;
       }
 
-      .primary-btn:hover,
-      .secondary-btn:hover {
-        transform: translateY(-1px);
+      .edit-btn {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .form-actions,
+      .table-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .alert {
@@ -446,6 +511,8 @@ export class UsuariosComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
 
   usuarios: Usuario[] = [];
+  editingUserId: string | null = null;
+
   loading = true;
   saving = false;
   errorMessage = '';
@@ -454,7 +521,7 @@ export class UsuariosComponent implements OnInit {
   usuarioForm = this.fb.group({
     nome: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required, Validators.minLength(6)]],
+    senha: ['', [Validators.minLength(6)]],
     perfil: ['' as UsuarioPerfil | '', [Validators.required]],
   });
 
@@ -490,6 +557,11 @@ export class UsuariosComponent implements OnInit {
       return;
     }
 
+    if (!this.editingUserId && !this.usuarioForm.value.senha) {
+      this.errorMessage = 'Informe uma senha para criar o usuário.';
+      return;
+    }
+
     this.saving = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -497,32 +569,39 @@ export class UsuariosComponent implements OnInit {
     const payload = {
       nome: this.usuarioForm.value.nome ?? '',
       email: this.usuarioForm.value.email ?? '',
-      senha: this.usuarioForm.value.senha ?? '',
       perfil: this.usuarioForm.value.perfil as UsuarioPerfil,
+      senha: this.usuarioForm.value.senha?.trim() || undefined,
     };
 
-    this.usuarioService.createUsuario(payload).subscribe({
+    const request$ = this.editingUserId
+      ? this.usuarioService.updateUsuario(this.editingUserId, payload)
+      : this.usuarioService.createUsuario({
+          nome: payload.nome,
+          email: payload.email,
+          perfil: payload.perfil,
+          senha: payload.senha ?? '',
+        });
+
+    request$.subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Usuário criado com sucesso.';
-        this.usuarioForm.reset({
-          nome: '',
-          email: '',
-          senha: '',
-          perfil: '',
-        });
+        this.successMessage = this.editingUserId
+          ? 'Usuário atualizado com sucesso.'
+          : 'Usuário criado com sucesso.';
+        this.cancelEdit();
         this.loadUsuarios();
       },
       error: (error) => {
         this.saving = false;
 
         if (error.status === 409) {
-          this.errorMessage = 'Já existe um usuário com esse e-mail.';
+          this.errorMessage =
+            error.error?.message || 'Já existe um usuário com esse e-mail.';
           return;
         }
 
         if (error.status === 403) {
-          this.errorMessage = 'Seu perfil não tem permissão para criar usuários.';
+          this.errorMessage = 'Seu perfil não tem permissão para salvar usuários.';
           return;
         }
 
@@ -531,7 +610,70 @@ export class UsuariosComponent implements OnInit {
           return;
         }
 
-        this.errorMessage = 'Erro ao criar usuário.';
+        this.errorMessage = 'Erro ao salvar usuário.';
+      },
+    });
+  }
+
+  startEdit(usuario: Usuario): void {
+    this.editingUserId = usuario.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.usuarioForm.patchValue({
+      nome: usuario.nome,
+      email: usuario.email,
+      senha: '',
+      perfil: usuario.perfil,
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.editingUserId = null;
+    this.usuarioForm.reset({
+      nome: '',
+      email: '',
+      senha: '',
+      perfil: '',
+    });
+  }
+
+  deleteUsuario(usuario: Usuario): void {
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir o usuário ${usuario.nome}?`
+    );
+
+    if (!confirmed) return;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.usuarioService.deleteUsuario(usuario.id).subscribe({
+      next: (response) => {
+        this.successMessage = response.message || 'Usuário excluído com sucesso.';
+
+        if (this.editingUserId === usuario.id) {
+          this.cancelEdit();
+        }
+
+        this.loadUsuarios();
+      },
+      error: (error) => {
+        if (error.status === 409) {
+          this.errorMessage =
+            error.error?.message ||
+            'Não é possível excluir este usuário porque ele possui histórico vinculado.';
+          return;
+        }
+
+        if (error.status === 403) {
+          this.errorMessage = 'Seu perfil não tem permissão para excluir usuários.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao excluir usuário.';
       },
     });
   }

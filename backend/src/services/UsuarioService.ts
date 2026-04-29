@@ -1,84 +1,124 @@
-import bcrypt from "bcryptjs";
 import { DataSource, Repository } from "typeorm";
+import bcrypt from "bcryptjs";
 import { Usuario } from "../entities/Usuario.js";
-import { createUserDTOSchema } from "../dtos/userDTO.js";
-import { z } from "zod";
+import { CreateUserDTO, UpdateUserDTO } from "../dtos/userDTO.js";
 import { AppError } from "../errors/AppError.js";
-
-type CreateUserDTO = z.infer<typeof createUserDTOSchema>;
+import { Lote } from "../entities/Lote.js";
+import { InspecaoLote } from "../entities/Inspecao_lote.js";
 
 export class UsuarioService {
-    private userRepo: Repository<Usuario>;
+    private usuarioRepo: Repository<Usuario>;
+    private loteRepo: Repository<Lote>;
+    private inspecaoRepo: Repository<InspecaoLote>;
 
     constructor(appDataSource: DataSource) {
-        this.userRepo = appDataSource.getRepository(Usuario);
+        this.usuarioRepo = appDataSource.getRepository(Usuario);
+        this.loteRepo = appDataSource.getRepository(Lote);
+        this.inspecaoRepo = appDataSource.getRepository(InspecaoLote);
     }
 
     async getAll() {
-        return this.userRepo.find();
+        const usuarios = await this.usuarioRepo.find({ order: { criado_em: "ASC" } });
+
+        return usuarios.map((usuario) => {
+            const { senha, ...usuarioSemSenha } = usuario as any;
+            return usuarioSemSenha;
+        });
     }
 
     async getById(id: string) {
-        const user = await this.userRepo.findOneBy({ id });
+        const usuario = await this.usuarioRepo.findOneBy({ id });
 
-        if (!user) {
+        if (!usuario) {
             throw new AppError("Usuário não encontrado", 404);
         }
 
-        return user;
-    }
+        const { senha, ...usuarioSemSenha } = usuario as any;
 
-    async getByEmail(email: string) {
-        return this.userRepo.findOne({
-            where: { email },
-            select: ["id", "nome", "email", "senha", "perfil", "criado_em"]
-        });
+        return usuarioSemSenha;
     }
 
     async createUser(data: CreateUserDTO) {
-        const usuarioExistente = await this.getByEmail(data.email);
+        const emailExists = await this.usuarioRepo.findOneBy({ email: data.email });
 
-        if (usuarioExistente) {
-            throw new AppError("Email já existe", 409);
+        if (emailExists) {
+            throw new AppError("Já existe um usuário com este e-mail", 409);
         }
 
-        const senhaHash = await bcrypt.hash(data.senha, 10);
+        const senhaHash = await bcrypt.hash(data.senha, 8);
 
-        const novoUsuario = this.userRepo.create({
-            ...data,
-            senha: senhaHash
+        const usuario = this.usuarioRepo.create({
+            nome: data.nome,
+            email: data.email,
+            senha: senhaHash,
+            perfil: data.perfil
         });
 
-        await this.userRepo.save(novoUsuario);
+        const usuarioSalvo = await this.usuarioRepo.save(usuario);
+        const { senha, ...usuarioSemSenha } = usuarioSalvo as any;
 
-        return novoUsuario;
+        return usuarioSemSenha;
     }
 
-    async updateUser(id: string, data: Partial<Usuario>) {
-        const usuario = await this.getById(id);
+    async updateUser(id: string, data: UpdateUserDTO) {
+        const usuario = await this.usuarioRepo.findOneBy({ id });
+
+        if (!usuario) {
+            throw new AppError("Usuário não encontrado", 404);
+        }
 
         if (data.email && data.email !== usuario.email) {
-            const emailExistente = await this.getByEmail(data.email);
+            const emailExists = await this.usuarioRepo.findOneBy({ email: data.email });
 
-            if (emailExistente) {
-                throw new AppError("Email já existe", 409);
+            if (emailExists) {
+                throw new AppError("Já existe um usuário com este e-mail", 409);
             }
-        }
 
-        if (data.nome !== undefined) {
-            usuario.nome = data.nome;
-        }
-
-        if (data.email !== undefined) {
             usuario.email = data.email;
         }
 
-        if (data.senha !== undefined) {
-            usuario.senha = await bcrypt.hash(data.senha, 10);
+        if (data.nome) {
+            usuario.nome = data.nome;
         }
 
-        await this.userRepo.save(usuario);
+        if (data.perfil) {
+            usuario.perfil = data.perfil;
+        }
 
-        return usuario;
+        if (data.senha) {
+            usuario.senha = await bcrypt.hash(data.senha, 8);
+        }
+
+        const usuarioAtualizado = await this.usuarioRepo.save(usuario);
+        const { senha, ...usuarioSemSenha } = usuarioAtualizado as any;
+
+        return usuarioSemSenha;
+    }
+
+    async deleteUser(id: string) {
+        const usuario = await this.usuarioRepo.findOneBy({ id });
+
+        if (!usuario) {
+            throw new AppError("Usuário não encontrado", 404);
+        }
+
+        const lotesVinculados = await this.loteRepo.count({
+            where: { operador: { id } }
+        });
+
+        const inspecoesVinculadas = await this.inspecaoRepo.count({
+            where: { inspetor: { id } }
+        });
+
+        if (lotesVinculados > 0 || inspecoesVinculadas > 0) {
+            throw new AppError(
+                "Não é possível excluir este usuário porque ele possui histórico vinculado a lotes ou inspeções. Use a opção de desativar usuário quando ela estiver disponível.",
+                409
+            );
+        }
+
+        await this.usuarioRepo.remove(usuario);
+
+        return { message: "Usuário excluído com sucesso" };
     }
 }

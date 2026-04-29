@@ -2,7 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { CreateUsuarioRequest, Usuario } from '../models/usuario.model';
+import {
+  CreateUsuarioRequest,
+  UpdateUsuarioRequest,
+  Usuario,
+} from '../models/usuario.model';
 
 @Injectable({
   providedIn: 'root',
@@ -19,5 +23,19 @@ export class UsuarioService {
 
   createUsuario(data: CreateUsuarioRequest): Observable<{ usuario: Usuario }> {
     return this.http.post<{ usuario: Usuario }>(`${this.apiUrl}/usuarios`, data);
+  }
+
+  updateUsuario(
+    id: string,
+    data: UpdateUsuarioRequest
+  ): Observable<{ usuario: Usuario }> {
+    return this.http.put<{ usuario: Usuario }>(
+      `${this.apiUrl}/usuarios/${id}`,
+      data
+    );
+  }
+
+  deleteUsuario(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/usuarios/${id}`);
   }
 }

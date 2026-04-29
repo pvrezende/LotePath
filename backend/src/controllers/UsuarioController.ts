@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { UsuarioService } from "../services/UsuarioService.js";
-import { CreateUserDTO } from "../dtos/userDTO.js";
+import { CreateUserDTO, UpdateUserDTO } from "../dtos/userDTO.js";
 
 export class UsuarioController {
     private usuarioService: UsuarioService;
@@ -13,10 +13,7 @@ export class UsuarioController {
         try {
             const usuarios = await this.usuarioService.getAll();
 
-            return res.status(200).json({
-                status: 200,
-                data: usuarios
-            });
+            return res.status(200).json({ status: 200, data: usuarios });
         } catch (error) {
             return next(error);
         }
@@ -38,9 +35,32 @@ export class UsuarioController {
             const data = req.body as CreateUserDTO;
             const novoUsuario = await this.usuarioService.createUser(data);
 
-            const { senha, ...usuarioSemSenha } = novoUsuario as any;
+            return res.status(201).json({ usuario: novoUsuario });
+        } catch (error) {
+            return next(error);
+        }
+    }
 
-            return res.status(201).json({ usuario: usuarioSemSenha });
+    async updateUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const data = req.body as UpdateUserDTO;
+
+            const usuario = await this.usuarioService.updateUser(id, data);
+
+            return res.status(200).json({ usuario });
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    async deleteUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+
+            const result = await this.usuarioService.deleteUser(id);
+
+            return res.status(200).json(result);
         } catch (error) {
             return next(error);
         }
