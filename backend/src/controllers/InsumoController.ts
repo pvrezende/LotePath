@@ -14,7 +14,7 @@ export class InsumoController {
             const loteId = req.params.id as string;
             const data = req.body as CreateInsumoDTO;
 
-            const insumo = await this.insumoService.create(loteId, data);
+            const insumo = await this.insumoService.create(loteId, data, req.user?.id);
 
             return res.status(201).json({ insumo });
         } catch (error) {
@@ -27,7 +27,7 @@ export class InsumoController {
             const loteId = req.params.id as string;
             const insumoId = req.params.insumoId as string;
 
-            await this.insumoService.delete(loteId, insumoId);
+            await this.insumoService.delete(loteId, insumoId, req.user?.id);
 
             return res.status(204).send();
         } catch (error) {

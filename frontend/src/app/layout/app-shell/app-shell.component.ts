@@ -7,6 +7,7 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { PermissionService } from '../../core/services/permission.service';
 
 @Component({
   selector: 'app-app-shell',
@@ -39,15 +40,17 @@ import { AuthService } from '../../core/services/auth.service';
             <span>Dashboard</span>
           </a>
 
-          <a
-            routerLink="/app/produtos"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-            (click)="closeMobileMenu()"
-          >
-            <span class="nav-icon">🏷️</span>
-            <span>Produtos</span>
-          </a>
+          @if (canManageProdutos) {
+            <a
+              routerLink="/app/produtos"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeMobileMenu()"
+            >
+              <span class="nav-icon">🏷️</span>
+              <span>Produtos</span>
+            </a>
+          }
 
           <a
             routerLink="/app/lotes"
@@ -59,25 +62,29 @@ import { AuthService } from '../../core/services/auth.service';
             <span>Lotes</span>
           </a>
 
-          <a
-            routerLink="/app/insumos"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-            (click)="closeMobileMenu()"
-          >
-            <span class="nav-icon">🧩</span>
-            <span>Insumos</span>
-          </a>
+          @if (canManageInsumos) {
+            <a
+              routerLink="/app/insumos"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeMobileMenu()"
+            >
+              <span class="nav-icon">🧩</span>
+              <span>Insumos</span>
+            </a>
+          }
 
-          <a
-            routerLink="/app/inspecao"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-            (click)="closeMobileMenu()"
-          >
-            <span class="nav-icon">✅</span>
-            <span>Inspeção</span>
-          </a>
+          @if (canInspectLotes) {
+            <a
+              routerLink="/app/inspecao"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeMobileMenu()"
+            >
+              <span class="nav-icon">✅</span>
+              <span>Inspeção</span>
+            </a>
+          }
 
           <a
             routerLink="/app/rastreabilidade"
@@ -88,6 +95,18 @@ import { AuthService } from '../../core/services/auth.service';
             <span class="nav-icon">🔎</span>
             <span>Rastreabilidade</span>
           </a>
+
+          @if (canManageUsuarios) {
+            <a
+              routerLink="/app/usuarios"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeMobileMenu()"
+            >
+              <span class="nav-icon">👥</span>
+              <span>Usuários</span>
+            </a>
+          }
         </nav>
 
         <div class="sidebar-footer">
@@ -256,7 +275,7 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       .active-link {
-        background: linear-gradient(135deg, #25b5ee 0%, #25b5ee 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: #ffffff !important;
         box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
       }
@@ -316,16 +335,6 @@ import { AuthService } from '../../core/services/auth.service';
         font-weight: 800;
         cursor: pointer;
         box-shadow: 0 12px 24px rgba(220, 38, 38, 0.18);
-        transition:
-          transform 0.18s ease,
-          box-shadow 0.18s ease,
-          filter 0.18s ease;
-      }
-
-      .logout-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 16px 30px rgba(220, 38, 38, 0.24);
-        filter: saturate(1.04);
       }
 
       .main-area {
@@ -508,6 +517,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class AppShellComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private permissionService = inject(PermissionService);
 
   mobileMenuOpen = false;
 
@@ -519,6 +529,22 @@ export class AppShellComponent {
 
   get userPerfil(): string {
     return this.user?.perfil ?? 'perfil';
+  }
+
+  get canManageProdutos(): boolean {
+    return this.permissionService.hasPermission('canManageProdutos');
+  }
+
+  get canManageInsumos(): boolean {
+    return this.permissionService.hasPermission('canManageInsumos');
+  }
+
+  get canInspectLotes(): boolean {
+    return this.permissionService.hasPermission('canInspectLotes');
+  }
+
+  get canManageUsuarios(): boolean {
+    return this.permissionService.hasPermission('canManageUsuarios');
   }
 
   toggleMobileMenu(): void {

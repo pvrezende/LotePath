@@ -14,7 +14,7 @@ export class InspecaoController {
             const loteId = req.params.id as string;
             const data = req.body as CreateInspecaoDTO;
 
-            const lote = await this.inspecaoService.create(loteId, data);
+            const lote = await this.inspecaoService.create(loteId, data, req.user?.id);
 
             return res.status(201).json({ lote });
         } catch (error) {
@@ -26,7 +26,7 @@ export class InspecaoController {
         try {
             const loteId = req.params.id as string;
 
-            const lote = await this.inspecaoService.delete(loteId);
+            const lote = await this.inspecaoService.delete(loteId, req.user?.id);
 
             return res.status(200).json({
                 message: "Inspeção excluída com sucesso",

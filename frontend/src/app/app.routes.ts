@@ -65,6 +65,13 @@ export const routes: Routes = [
           ).then((m) => m.RastreabilidadeComponent),
       },
       {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./features/usuarios/pages/usuarios/usuarios.component').then(
+            (m) => m.UsuariosComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

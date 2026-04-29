@@ -7,6 +7,7 @@ import inspecaoRoutes from "./inspecaoRoutes.js";
 import insumoRoutes from "./insumoRoutes.js";
 import rastreabilidadeRoutes from "./rastreabilidadeRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
+import auditRoutes from "./auditRoutes.js";
 
 const indexRouter = Router();
 
@@ -18,5 +19,6 @@ indexRouter.use(inspecaoRoutes);
 indexRouter.use(insumoRoutes);
 indexRouter.use(rastreabilidadeRoutes);
 indexRouter.use(dashboardRoutes);
+indexRouter.use(auditRoutes);
 
 export default indexRouter;

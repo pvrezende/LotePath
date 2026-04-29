@@ -38,7 +38,9 @@ export class UsuarioController {
             const data = req.body as CreateUserDTO;
             const novoUsuario = await this.usuarioService.createUser(data);
 
-            return res.status(201).json({ usuario: novoUsuario });
+            const { senha, ...usuarioSemSenha } = novoUsuario as any;
+
+            return res.status(201).json({ usuario: usuarioSemSenha });
         } catch (error) {
             return next(error);
         }
