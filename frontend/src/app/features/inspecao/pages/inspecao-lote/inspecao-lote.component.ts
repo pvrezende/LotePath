@@ -19,17 +19,33 @@ import { AuthService } from '../../../../core/services/auth.service';
   ],
   template: `
     <section class="inspecao-page">
-      <div class="page-header">
-        <div>
+      <div class="hero-card">
+        <div class="hero-copy">
           <span class="eyebrow">INSPEÇÃO</span>
-          <h2>Inspeção de lote</h2>
-          <p>Selecione um lote e registre o resultado da inspeção de qualidade.</p>
+          <h2>Inspeção de qualidade</h2>
+          <p>
+            Selecione um lote, registre o resultado da inspeção e acompanhe o
+            resumo operacional com uma visualização mais clara e profissional.
+          </p>
+        </div>
+
+        <div class="hero-badge">
+          <span class="hero-label">Lotes disponíveis</span>
+          <strong>{{ lotes.length }}</strong>
+          <small>para consulta e inspeção</small>
         </div>
       </div>
 
       <div class="content-grid">
         <section class="form-card">
-          <h3>Registrar inspeção</h3>
+          <div class="card-header">
+            <div>
+              <h3>Registrar inspeção</h3>
+              <p>Escolha um lote e informe o resultado da análise de qualidade.</p>
+            </div>
+
+            <span class="card-chip">Qualidade</span>
+          </div>
 
           <div class="form-group">
             <label for="loteSelect">Lote</label>
@@ -61,7 +77,10 @@ import { AuthService } from '../../../../core/services/auth.service';
             @if (selectedLote.inspecao) {
               <div class="already-inspected-box">
                 <div class="inspection-header">
-                  <h4>Inspeção já registrada</h4>
+                  <div>
+                    <h4>Inspeção já registrada</h4>
+                    <small>O lote já possui resultado salvo no sistema.</small>
+                  </div>
 
                   @if (isGestor) {
                     <button
@@ -122,7 +141,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                   <div class="alert success">{{ successMessage }}</div>
                 }
 
-                <button type="submit" [disabled]="saving">
+                <button type="submit" class="primary-btn" [disabled]="saving">
                   {{ saving ? 'Salvando...' : 'Registrar inspeção' }}
                 </button>
               </form>
@@ -136,8 +155,12 @@ import { AuthService } from '../../../../core/services/auth.service';
         </section>
 
         <section class="list-card">
-          <div class="list-header">
-            <h3>Resumo do lote</h3>
+          <div class="card-header">
+            <div>
+              <h3>Resumo do lote</h3>
+              <p>Consulte rapidamente os dados operacionais do lote selecionado.</p>
+            </div>
+
             @if (selectedLoteId) {
               <button type="button" class="secondary-btn" (click)="refreshSelectedLote()">
                 Atualizar
@@ -195,8 +218,27 @@ import { AuthService } from '../../../../core/services/auth.service';
         gap: 24px;
       }
 
+      .hero-card,
+      .form-card,
+      .list-card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero-card {
+        border-radius: 24px;
+        padding: 28px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        background:
+          radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 32%),
+          rgba(255, 255, 255, 0.92);
+      }
+
       .eyebrow {
-        display: inline-block;
+        display: inline-flex;
         margin-bottom: 10px;
         font-size: 12px;
         font-weight: 800;
@@ -204,14 +246,49 @@ import { AuthService } from '../../../../core/services/auth.service';
         color: #2563eb;
       }
 
-      .page-header h2 {
-        font-size: 32px;
-        margin-bottom: 8px;
+      .hero-copy h2 {
+        margin: 0 0 10px;
+        font-size: 38px;
+        line-height: 1.05;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        max-width: 760px;
+        color: #64748b;
+        line-height: 1.7;
+      }
+
+      .hero-badge {
+        min-width: 220px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+      }
+
+      .hero-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #2563eb;
+      }
+
+      .hero-badge strong {
+        display: block;
+        font-size: 28px;
+        line-height: 1;
+        margin-bottom: 6px;
         color: #0f172a;
       }
 
-      .page-header p {
-        color: #64748b;
+      .hero-badge small {
+        color: #475569;
       }
 
       .content-grid {
@@ -222,17 +299,42 @@ import { AuthService } from '../../../../core/services/auth.service';
 
       .form-card,
       .list-card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
       }
 
-      .form-card h3,
-      .list-card h3 {
-        margin-bottom: 18px;
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .card-header h3 {
+        margin: 0 0 4px;
+        font-size: 24px;
         color: #0f172a;
+      }
+
+      .card-header p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .card-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
       }
 
       .form-group {
@@ -242,7 +344,7 @@ import { AuthService } from '../../../../core/services/auth.service';
       label {
         display: block;
         margin-bottom: 6px;
-        font-weight: 600;
+        font-weight: 700;
         color: #334155;
       }
 
@@ -251,35 +353,35 @@ import { AuthService } from '../../../../core/services/auth.service';
       textarea {
         width: 100%;
         border: 1px solid #d1d5db;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 12px 14px;
         outline: none;
         background: #fff;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus,
       select:focus,
       textarea:focus {
         border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      }
+
+      .selected-lote-box,
+      .already-inspected-box,
+      .summary-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 16px;
       }
 
       .selected-lote-box,
       .already-inspected-box {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 16px;
         margin-bottom: 18px;
       }
 
-      .selected-lote-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-
+      .selected-lote-top,
       .inspection-header {
         display: flex;
         align-items: center;
@@ -289,8 +391,12 @@ import { AuthService } from '../../../../core/services/auth.service';
       }
 
       .already-inspected-box h4 {
-        margin: 0;
+        margin: 0 0 4px;
         color: #0f172a;
+      }
+
+      .already-inspected-box small {
+        color: #64748b;
       }
 
       .already-inspected-box p {
@@ -299,8 +405,8 @@ import { AuthService } from '../../../../core/services/auth.service';
       }
 
       .alert {
-        border-radius: 10px;
-        padding: 12px;
+        border-radius: 12px;
+        padding: 12px 14px;
         margin-bottom: 14px;
         font-size: 14px;
       }
@@ -308,58 +414,61 @@ import { AuthService } from '../../../../core/services/auth.service';
       .alert.error {
         background: #fef2f2;
         color: #b91c1c;
+        border: 1px solid #fecaca;
       }
 
       .alert.success {
         background: #ecfdf5;
         color: #166534;
+        border: 1px solid #bbf7d0;
       }
 
-      button {
-        height: 44px;
-        padding: 0 16px;
+      .primary-btn,
+      .secondary-btn,
+      .delete-btn {
         border: none;
-        border-radius: 10px;
-        background: #2563eb;
-        color: white;
+        border-radius: 12px;
         font-weight: 700;
         cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        height: 44px;
+        padding: 0 16px;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
       }
 
       .secondary-btn {
-        background: #e2e8f0;
+        background: #f1f5f9;
         color: #0f172a;
+        border: 1px solid #e2e8f0;
       }
 
       .delete-btn {
-        background: #dc2626;
-        color: #ffffff;
         height: 40px;
+        padding: 0 14px;
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
       }
 
+      .primary-btn:hover,
+      .secondary-btn:hover,
       .delete-btn:hover {
-        background: #b91c1c;
-      }
-
-      .list-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 18px;
+        transform: translateY(-1px);
       }
 
       .summary-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
-      }
-
-      .summary-card {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 16px;
       }
 
       .summary-label {
@@ -375,35 +484,47 @@ import { AuthService } from '../../../../core/services/auth.service';
       .summary-card strong,
       .summary-card p {
         color: #0f172a;
+        margin: 0;
       }
 
-      @media (max-width: 1100px) {
+      @media (max-width: 1180px) {
+        .hero-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .content-grid {
           grid-template-columns: 1fr;
         }
       }
 
       @media (max-width: 768px) {
-        .summary-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 640px) {
-        .page-header h2 {
-          font-size: 26px;
-        }
-
+        .hero-card,
         .form-card,
         .list-card {
           padding: 18px;
+          border-radius: 20px;
         }
 
+        .hero-copy h2 {
+          font-size: 30px;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .card-header,
         .selected-lote-top,
-        .list-header,
         .inspection-header {
           flex-direction: column;
           align-items: flex-start;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-copy h2 {
+          font-size: 26px;
         }
       }
     `,
@@ -469,8 +590,7 @@ export class InspecaoLoteComponent implements OnInit {
 
     this.loteService.getLotes().subscribe({
       next: (response) => {
-        const lote =
-          response.data.find((item) => item.id === this.selectedLoteId) ?? null;
+        const lote = response.data.find((item) => item.id === this.selectedLoteId) ?? null;
         this.selectedLote = lote;
       },
       error: () => {
@@ -489,8 +609,10 @@ export class InspecaoLoteComponent implements OnInit {
     return labels[turno] ?? turno;
   }
 
-  formatResultado(resultado: string): string {
-    const labels: Record<string, string> = {
+  formatResultado(
+    resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado'
+  ): string {
+    const labels = {
       aprovado: 'Aprovado',
       aprovado_restricao: 'Aprovado com restrição',
       reprovado: 'Reprovado',

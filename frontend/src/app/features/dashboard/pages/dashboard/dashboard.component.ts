@@ -5,7 +5,6 @@ import {
   DashboardLote,
 } from '../../models/dashboard.model';
 import { DashboardService } from '../../services/dashboard.service';
-import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +15,6 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     FormsModule,
-    StatCardComponent,
     StatusBadgeComponent,
     EmptyStateComponent,
   ],
@@ -240,9 +238,15 @@ import { FormsModule } from '@angular/forms';
       }
 
       .hero-card {
-        padding: 28px;
+        padding: 18px 20px;
         position: relative;
         overflow: hidden;
+      }
+
+      .hero-copy h2 {
+        font-size: 26px;
+        line-height: 1.1;
+        margin: 0 0 6px;
       }
 
       .hero-card::before {

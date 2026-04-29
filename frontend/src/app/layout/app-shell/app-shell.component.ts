@@ -31,7 +31,11 @@ import { AuthService } from '../../core/services/auth.service';
 
             <div class="brand-area">
               <div class="brand-mark">
-                <span class="brand-mark-core"></span>
+                <img
+                  src="/assets/imagens/Lotepath.png"
+                  alt="Logo LotePath"
+                  class="brand-logo"
+                />
               </div>
 
               <div class="brand-text">
@@ -156,19 +160,21 @@ import { AuthService } from '../../core/services/auth.service';
       .topbar {
         position: relative;
         z-index: 1;
-        padding: 18px 20px 0;
+        padding: 12px 14px 0;
       }
 
       .topbar-inner {
-        max-width: 1480px;
-        margin: 0 auto;
+        width: 100%;
+        max-width: none;
+        margin: 0;
         background: #ffffff;
         border: 1px solid rgba(226, 232, 240, 0.95);
-        border-radius: 26px;
+        border-radius: 24px;
         box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-        padding: 18px 22px 16px;
+        padding: 14px 18px 14px;
       }
-            .topbar-main {
+
+      .topbar-main {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -184,7 +190,7 @@ import { AuthService } from '../../core/services/auth.service';
           rgba(226, 232, 240, 1) 80%,
           rgba(226, 232, 240, 0) 100%
         );
-        margin: 16px 0 14px;
+        margin: 12px 0 12px;
       }
 
       .brand-area {
@@ -195,23 +201,24 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       .brand-mark {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #2563eb 0%, #0f4fd6 100%);
-        position: relative;
-        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+        width: 118px;
+        height: 74px;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .brand-mark-core {
-        position: absolute;
-        inset: 12px;
-        border-radius: 12px;
-        background:
-          radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 50%),
-          rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.28);
+      .brand-logo {
+        width: 118px;
+        height: auto;
+        max-height: 74px;
+        object-fit: contain;
+        display: block;
+        filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.10));
       }
 
       .brand-text h1 {
@@ -368,21 +375,23 @@ import { AuthService } from '../../core/services/auth.service';
       .content-area {
         flex: 1;
         width: 100%;
-        padding: 24px 20px 30px;
+        padding: 14px 14px 18px;
       }
 
       .content-shell {
-        max-width: 1480px;
-        margin: 0 auto;
+        width: 100%;
+        max-width: none;
+        margin: 0;
       }
 
       .footer {
-        padding: 0 20px 20px;
+        padding: 0 14px 14px;
       }
 
       .footer-inner {
-        max-width: 1480px;
-        margin: 0 auto;
+        width: 100%;
+        max-width: none;
+        margin: 0;
         background: rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(226, 232, 240, 0.95);
         border-radius: 22px;
@@ -427,11 +436,11 @@ import { AuthService } from '../../core/services/auth.service';
 
       @media (max-width: 900px) {
         .topbar {
-          padding: 14px 14px 0;
+          padding: 10px 10px 0;
         }
 
         .topbar-inner {
-          padding: 16px 16px 14px;
+          padding: 14px 14px 12px;
         }
 
         .desktop-user-area {
@@ -483,11 +492,11 @@ import { AuthService } from '../../core/services/auth.service';
         }
 
         .content-area {
-          padding: 18px 14px 24px;
+          padding: 12px 10px 16px;
         }
 
         .footer {
-          padding: 0 14px 14px;
+          padding: 0 10px 10px;
         }
 
         .footer-inner {
@@ -498,14 +507,13 @@ import { AuthService } from '../../core/services/auth.service';
 
       @media (max-width: 640px) {
         .brand-mark {
-          width: 42px;
-          height: 42px;
-          border-radius: 14px;
+          width: 86px;
+          height: 56px;
         }
 
-        .brand-mark-core {
-          inset: 10px;
-          border-radius: 10px;
+        .brand-logo {
+          width: 86px;
+          max-height: 56px;
         }
 
         .brand-text h1 {

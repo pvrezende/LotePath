@@ -20,20 +20,33 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
   ],
   template: `
     <section class="rastreabilidade-page">
-      <div class="page-header">
-        <div>
+      <div class="hero-card">
+        <div class="hero-copy">
           <span class="eyebrow">RASTREABILIDADE</span>
-          <h2>Consulta de rastreabilidade</h2>
+          <h2>Consulta inteligente de rastreabilidade</h2>
           <p>
-            Pesquise por lote ou por insumo para identificar vínculos de produção
-            e cenários de recall.
+            Pesquise por lote ou por insumo para identificar vínculos de
+            produção, dependências operacionais e cenários de recall com uma
+            experiência mais visual.
           </p>
+        </div>
+
+        <div class="hero-badge">
+          <span class="hero-label">Consultas disponíveis</span>
+          <strong>2 modos</strong>
+          <small>por lote ou por insumo</small>
         </div>
       </div>
 
       <div class="search-grid">
         <section class="search-card">
-          <h3>Buscar por lote</h3>
+          <div class="card-header">
+            <div>
+              <h3>Buscar por lote</h3>
+              <p>Informe o ID do lote para visualizar os detalhes completos.</p>
+            </div>
+            <span class="card-chip">Lote</span>
+          </div>
 
           <form [formGroup]="loteForm" (ngSubmit)="searchByLote()">
             <div class="form-group">
@@ -46,14 +59,20 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               />
             </div>
 
-            <button type="submit" [disabled]="loadingLote">
+            <button type="submit" class="primary-btn" [disabled]="loadingLote">
               {{ loadingLote ? 'Buscando...' : 'Buscar lote' }}
             </button>
           </form>
         </section>
 
         <section class="search-card">
-          <h3>Buscar por insumo</h3>
+          <div class="card-header">
+            <div>
+              <h3>Buscar por insumo</h3>
+              <p>Informe o código ou lote do insumo para localizar impactos.</p>
+            </div>
+            <span class="card-chip">Insumo</span>
+          </div>
 
           <form [formGroup]="insumoForm" (ngSubmit)="searchByInsumo()">
             <div class="form-group">
@@ -66,7 +85,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               />
             </div>
 
-            <button type="submit" [disabled]="loadingInsumo">
+            <button type="submit" class="primary-btn" [disabled]="loadingInsumo">
               {{ loadingInsumo ? 'Buscando...' : 'Buscar insumo' }}
             </button>
           </form>
@@ -84,7 +103,10 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
       <div class="results-grid">
         <section class="result-card">
           <div class="section-header">
-            <h3>Resultado por lote</h3>
+            <div>
+              <h3>Resultado por lote</h3>
+              <p>Detalhamento completo do lote consultado.</p>
+            </div>
           </div>
 
           @if (!loteResult) {
@@ -150,14 +172,8 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
               @if (loteResult.lote.inspecao) {
                 <div class="inspection-box">
-                  <p>
-                    <b>Resultado:</b>
-                    {{ formatResultado(loteResult.lote.inspecao.resultado) }}
-                  </p>
-                  <p>
-                    <b>Quantidade reprovada:</b>
-                    {{ loteResult.lote.inspecao.quantidade_repr }}
-                  </p>
+                  <p><b>Resultado:</b> {{ formatResultado(loteResult.lote.inspecao.resultado) }}</p>
+                  <p><b>Quantidade reprovada:</b> {{ loteResult.lote.inspecao.quantidade_repr }}</p>
                   <p>
                     <b>Descrição do desvio:</b>
                     {{ loteResult.lote.inspecao.descricao_desvio || 'Nenhum desvio informado.' }}
@@ -179,7 +195,19 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <h4>Insumos vinculados</h4>
 
               @if (loteResult.lote.insumos && loteResult.lote.insumos.length > 0) {
-                <div class="table-wrapper">
+                <div class="mobile-list">
+                  @for (insumo of loteResult.lote.insumos; track insumo.id) {
+                    <article class="mobile-card">
+                      <strong>{{ insumo.nome_insumo }}</strong>
+                      <span><b>Código:</b> {{ insumo.codigo_insumo }}</span>
+                      <span><b>Lote:</b> {{ insumo.lote_insumo }}</span>
+                      <span><b>Quantidade:</b> {{ insumo.quantidade }}</span>
+                      <span><b>Unidade:</b> {{ insumo.unidade }}</span>
+                    </article>
+                  }
+                </div>
+
+                <div class="table-wrapper desktop-table">
                   <table>
                     <thead>
                       <tr>
@@ -215,7 +243,10 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
         <section class="result-card">
           <div class="section-header">
-            <h3>Resultado por insumo</h3>
+            <div>
+              <h3>Resultado por insumo</h3>
+              <p>Veja os lotes afetados pelo insumo informado.</p>
+            </div>
           </div>
 
           @if (!insumoResult) {
@@ -234,7 +265,21 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <h4>Lotes afetados</h4>
 
               @if (insumoResult.lotesAfetados.length > 0) {
-                <div class="table-wrapper">
+                <div class="mobile-list">
+                  @for (lote of insumoResult.lotesAfetados; track lote.id) {
+                    <article class="mobile-card">
+                      <div class="mobile-head">
+                        <strong>{{ lote.numero_lote }}</strong>
+                        <app-status-badge [status]="lote.status" />
+                      </div>
+                      <span><b>Produto:</b> {{ lote.produto.nome }}</span>
+                      <span><b>Operador:</b> {{ lote.operador.nome }}</span>
+                      <span><b>Data:</b> {{ formatDate(lote.data_producao) }}</span>
+                    </article>
+                  }
+                </div>
+
+                <div class="table-wrapper desktop-table">
                   <table>
                     <thead>
                       <tr>
@@ -280,8 +325,27 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         gap: 24px;
       }
 
+      .hero-card,
+      .search-card,
+      .result-card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero-card {
+        border-radius: 24px;
+        padding: 28px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        background:
+          radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 32%),
+          rgba(255, 255, 255, 0.92);
+      }
+
       .eyebrow {
-        display: inline-block;
+        display: inline-flex;
         margin-bottom: 10px;
         font-size: 12px;
         font-weight: 800;
@@ -289,14 +353,49 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         color: #2563eb;
       }
 
-      .page-header h2 {
-        font-size: 32px;
-        margin-bottom: 8px;
+      .hero-copy h2 {
+        margin: 0 0 10px;
+        font-size: 38px;
+        line-height: 1.05;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        max-width: 760px;
+        color: #64748b;
+        line-height: 1.7;
+      }
+
+      .hero-badge {
+        min-width: 220px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+      }
+
+      .hero-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #2563eb;
+      }
+
+      .hero-badge strong {
+        display: block;
+        font-size: 28px;
+        line-height: 1;
+        margin-bottom: 6px;
         color: #0f172a;
       }
 
-      .page-header p {
-        color: #64748b;
+      .hero-badge small {
+        color: #475569;
       }
 
       .search-grid,
@@ -308,17 +407,40 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       .search-card,
       .result-card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
       }
 
-      .search-card h3,
-      .section-header h3 {
+      .card-header,
+      .section-header {
         margin-bottom: 18px;
+      }
+
+      .card-header h3,
+      .section-header h3 {
+        margin: 0 0 4px;
+        font-size: 24px;
         color: #0f172a;
+      }
+
+      .card-header p,
+      .section-header p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .card-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
       }
 
       .form-group {
@@ -328,48 +450,58 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
       label {
         display: block;
         margin-bottom: 6px;
-        font-weight: 600;
+        font-weight: 700;
         color: #334155;
       }
 
       input {
         width: 100%;
         border: 1px solid #d1d5db;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 12px 14px;
         outline: none;
         background: #fff;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus {
         border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
       }
 
-      button {
+      .primary-btn {
         height: 44px;
         padding: 0 16px;
+        border-radius: 12px;
         border: none;
-        border-radius: 10px;
-        background: #2563eb;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: white;
         font-weight: 700;
         cursor: pointer;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+        transition: 0.2s ease;
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-1px);
       }
 
       .alert {
-        border-radius: 10px;
-        padding: 12px;
+        border-radius: 12px;
+        padding: 12px 14px;
         font-size: 14px;
       }
 
       .alert.error {
         background: #fef2f2;
         color: #b91c1c;
+        border: 1px solid #fecaca;
       }
 
       .alert.success {
         background: #ecfdf5;
         color: #166534;
+        border: 1px solid #bbf7d0;
       }
 
       .info-grid {
@@ -380,10 +512,11 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       .info-card,
       .inspection-box,
-      .insumo-highlight {
+      .insumo-highlight,
+      .mobile-card {
         background: #f8fafc;
         border: 1px solid #e5e7eb;
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 16px;
       }
 
@@ -401,12 +534,18 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         text-transform: uppercase;
       }
 
+      .info-card strong,
+      .info-card p {
+        color: #0f172a;
+        margin: 0;
+      }
+
       .subsection {
         margin-top: 24px;
       }
 
       .subsection h4 {
-        margin-bottom: 14px;
+        margin: 0 0 14px;
         color: #0f172a;
       }
 
@@ -417,6 +556,29 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       .table-wrapper {
         overflow-x: auto;
+        border-radius: 18px;
+      }
+
+      .desktop-table {
+        display: block;
+      }
+
+      .mobile-list {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mobile-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .mobile-head {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       table {
@@ -427,21 +589,36 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
       th,
       td {
         text-align: left;
-        padding: 14px 12px;
+        padding: 15px 12px;
         border-bottom: 1px solid #e5e7eb;
         vertical-align: middle;
       }
 
       th {
-        font-size: 13px;
+        font-size: 12px;
         color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      td {
+        color: #0f172a;
+      }
+
+      tbody tr:hover {
+        background: #f8fafc;
       }
 
       .strong {
         font-weight: 800;
       }
 
-      @media (max-width: 1100px) {
+      @media (max-width: 1180px) {
+        .hero-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .search-grid,
         .results-grid,
         .info-grid {
@@ -449,14 +626,30 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         }
       }
 
-      @media (max-width: 640px) {
-        .page-header h2 {
-          font-size: 26px;
-        }
-
+      @media (max-width: 768px) {
+        .hero-card,
         .search-card,
         .result-card {
           padding: 18px;
+          border-radius: 20px;
+        }
+
+        .hero-copy h2 {
+          font-size: 30px;
+        }
+
+        .desktop-table {
+          display: none;
+        }
+
+        .mobile-list {
+          display: flex;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-copy h2 {
+          font-size: 26px;
         }
       }
     `,
@@ -504,7 +697,8 @@ export class RastreabilidadeComponent {
       error: () => {
         this.loadingLote = false;
         this.loteResult = null;
-        this.errorMessage = 'Não foi possível encontrar a rastreabilidade do lote informado.';
+        this.errorMessage =
+          'Não foi possível encontrar a rastreabilidade do lote informado.';
       },
     });
   }
@@ -531,7 +725,8 @@ export class RastreabilidadeComponent {
       error: () => {
         this.loadingInsumo = false;
         this.insumoResult = null;
-        this.errorMessage = 'Não foi possível encontrar resultados para o insumo informado.';
+        this.errorMessage =
+          'Não foi possível encontrar a rastreabilidade do insumo informado.';
       },
     });
   }
@@ -546,8 +741,10 @@ export class RastreabilidadeComponent {
     return labels[turno] ?? turno;
   }
 
-  formatResultado(resultado: string): string {
-    const labels: Record<string, string> = {
+  formatResultado(
+    resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado'
+  ): string {
+    const labels = {
       aprovado: 'Aprovado',
       aprovado_restricao: 'Aprovado com restrição',
       reprovado: 'Reprovado',
@@ -557,7 +754,12 @@ export class RastreabilidadeComponent {
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('pt-BR');
+    const raw = String(date).slice(0, 10);
+    const [year, month, day] = raw.split('-');
+
+    if (!year || !month || !day) return String(date);
+
+    return `${day}/${month}/${year}`;
   }
 
   formatDateTime(date: string): string {
