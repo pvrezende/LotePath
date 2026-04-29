@@ -11,17 +11,33 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
   imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent],
   template: `
     <section class="produtos-page">
-      <div class="page-header">
-        <div>
+      <div class="hero-card">
+        <div class="hero-copy">
           <span class="eyebrow">CADASTRO</span>
-          <h2>Produtos</h2>
-          <p>Cadastre e visualize os produtos disponíveis para abertura de lotes.</p>
+          <h2>Catálogo de produtos</h2>
+          <p>
+            Cadastre, visualize e mantenha organizados os produtos utilizados na
+            abertura de lotes, com uma visão mais profissional do portfólio.
+          </p>
+        </div>
+
+        <div class="hero-badge">
+          <span class="hero-label">Produtos cadastrados</span>
+          <strong>{{ produtos.length }}</strong>
+          <small>itens disponíveis</small>
         </div>
       </div>
 
       <div class="content-grid">
         <section class="form-card">
-          <h3>Novo produto</h3>
+          <div class="card-header">
+            <div>
+              <h3>Novo produto</h3>
+              <p>Preencha os dados para adicionar um novo produto ao sistema.</p>
+            </div>
+
+            <span class="card-chip">Cadastro</span>
+          </div>
 
           <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
@@ -36,7 +52,12 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 
             <div class="form-group">
               <label for="descricao">Descrição</label>
-              <textarea id="descricao" rows="3" formControlName="descricao"></textarea>
+              <textarea
+                id="descricao"
+                rows="4"
+                formControlName="descricao"
+                placeholder="Descreva o produto e sua finalidade."
+              ></textarea>
             </div>
 
             <div class="form-group">
@@ -57,26 +78,57 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
               <div class="alert success">{{ successMessage }}</div>
             }
 
-            <button type="submit" [disabled]="saving">
+            <button type="submit" class="primary-btn" [disabled]="saving">
               {{ saving ? 'Salvando...' : 'Cadastrar produto' }}
             </button>
           </form>
         </section>
 
         <section class="list-card">
-          <div class="list-header">
-            <h3>Produtos cadastrados</h3>
-            <button type="button" class="secondary-btn" (click)="loadProdutos()">
-              Atualizar
-            </button>
+          <div class="card-header">
+            <div>
+              <h3>Produtos cadastrados</h3>
+              <p>Consulte os produtos disponíveis para abertura de lotes.</p>
+            </div>
+
+            <div class="list-actions">
+              <span class="card-chip">{{ produtos.length }} produto(s)</span>
+              <button type="button" class="secondary-btn" (click)="loadProdutos()">
+                Atualizar
+              </button>
+            </div>
           </div>
 
           @if (loading) {
             <div class="feedback-box">
+              <div class="loading-line"></div>
               <p>Carregando produtos...</p>
             </div>
           } @else if (produtos.length > 0) {
-            <div class="table-wrapper">
+            <div class="mobile-product-list">
+              @for (produto of produtos; track produto.id) {
+                <article class="mobile-product-card">
+                  <div class="mobile-product-top">
+                    <strong>{{ produto.codigo }}</strong>
+                    <span
+                      class="status-chip"
+                      [class.ativo]="produto.ativo"
+                      [class.inativo]="!produto.ativo"
+                    >
+                      {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </div>
+
+                  <div class="mobile-product-body">
+                    <span><b>Nome:</b> {{ produto.nome }}</span>
+                    <span><b>Linha:</b> {{ produto.linha }}</span>
+                    <span><b>Descrição:</b> {{ produto.descricao || 'Sem descrição.' }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+
+            <div class="table-wrapper desktop-table">
               <table>
                 <thead>
                   <tr>
@@ -124,8 +176,28 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         gap: 24px;
       }
 
+      .hero-card,
+      .form-card,
+      .list-card,
+      .feedback-box {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero-card {
+        border-radius: 24px;
+        padding: 28px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        background:
+          radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 32%),
+          rgba(255, 255, 255, 0.92);
+      }
+
       .eyebrow {
-        display: inline-block;
+        display: inline-flex;
         margin-bottom: 10px;
         font-size: 12px;
         font-weight: 800;
@@ -133,14 +205,49 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         color: #2563eb;
       }
 
-      .page-header h2 {
-        font-size: 32px;
-        margin-bottom: 8px;
+      .hero-copy h2 {
+        margin: 0 0 10px;
+        font-size: 38px;
+        line-height: 1.05;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        max-width: 760px;
+        color: #64748b;
+        line-height: 1.7;
+      }
+
+      .hero-badge {
+        min-width: 220px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+      }
+
+      .hero-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #2563eb;
+      }
+
+      .hero-badge strong {
+        display: block;
+        font-size: 28px;
+        line-height: 1;
+        margin-bottom: 6px;
         color: #0f172a;
       }
 
-      .page-header p {
-        color: #64748b;
+      .hero-badge small {
+        color: #475569;
       }
 
       .content-grid {
@@ -151,17 +258,49 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 
       .form-card,
       .list-card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 24px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
       }
 
-      .form-card h3,
-      .list-card h3 {
-        margin-bottom: 18px;
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .card-header h3 {
+        margin: 0 0 4px;
+        font-size: 24px;
         color: #0f172a;
+      }
+
+      .card-header p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .card-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .list-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
       }
 
       .form-group {
@@ -171,7 +310,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       label {
         display: block;
         margin-bottom: 6px;
-        font-weight: 600;
+        font-weight: 700;
         color: #334155;
       }
 
@@ -179,15 +318,21 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       textarea {
         width: 100%;
         border: 1px solid #d1d5db;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 12px 14px;
         outline: none;
         background: #fff;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus,
       textarea:focus {
         border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      }
+
+      textarea {
+        resize: vertical;
       }
 
       .checkbox-row {
@@ -195,6 +340,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         align-items: center;
         gap: 10px;
         margin: 8px 0 16px;
+        font-weight: 600;
       }
 
       .checkbox-row input {
@@ -202,8 +348,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       .alert {
-        border-radius: 10px;
-        padding: 12px;
+        border-radius: 12px;
+        padding: 12px 14px;
         margin-bottom: 14px;
         font-size: 14px;
       }
@@ -211,46 +357,101 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       .alert.error {
         background: #fef2f2;
         color: #b91c1c;
+        border: 1px solid #fecaca;
       }
 
       .alert.success {
         background: #ecfdf5;
         color: #166534;
+        border: 1px solid #bbf7d0;
       }
 
-      button {
+      .primary-btn,
+      .secondary-btn {
         height: 44px;
         padding: 0 16px;
+        border-radius: 12px;
         border: none;
-        border-radius: 10px;
-        background: #2563eb;
-        color: white;
         font-weight: 700;
         cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
       }
 
       .secondary-btn {
-        background: #e2e8f0;
+        background: #f1f5f9;
         color: #0f172a;
+        border: 1px solid #e2e8f0;
       }
 
-      .list-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 18px;
+      .primary-btn:hover,
+      .secondary-btn:hover {
+        transform: translateY(-1px);
       }
 
       .feedback-box {
+        border-radius: 18px;
+        padding: 20px;
+      }
+
+      .loading-line {
+        width: 160px;
+        height: 10px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+        background: linear-gradient(90deg, #dbeafe 0%, #93c5fd 50%, #dbeafe 100%);
+        animation: pulse 1.4s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+      }
+
+      .desktop-table {
+        display: block;
+      }
+
+      .mobile-product-list {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mobile-product-card {
         background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 18px;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .mobile-product-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mobile-product-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: #334155;
+        font-size: 14px;
       }
 
       .table-wrapper {
         overflow-x: auto;
+        border-radius: 18px;
       }
 
       table {
@@ -261,13 +462,23 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       th,
       td {
         text-align: left;
-        padding: 14px 12px;
+        padding: 15px 12px;
         border-bottom: 1px solid #e5e7eb;
       }
 
       th {
-        font-size: 13px;
+        font-size: 12px;
         color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      td {
+        color: #0f172a;
+      }
+
+      tbody tr:hover {
+        background: #f8fafc;
       }
 
       .strong {
@@ -276,7 +487,10 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 
       .status-chip {
         display: inline-flex;
-        padding: 8px 12px;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 12px;
         border-radius: 999px;
         font-size: 12px;
         font-weight: 800;
@@ -292,9 +506,48 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         color: #b91c1c;
       }
 
+      @media (max-width: 1180px) {
+        .hero-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
       @media (max-width: 980px) {
         .content-grid {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .hero-card,
+        .form-card,
+        .list-card {
+          padding: 18px;
+          border-radius: 20px;
+        }
+
+        .hero-copy h2 {
+          font-size: 30px;
+        }
+
+        .card-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .desktop-table {
+          display: none;
+        }
+
+        .mobile-product-list {
+          display: flex;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-copy h2 {
+          font-size: 26px;
         }
       }
     `,

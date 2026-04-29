@@ -10,8 +10,8 @@ export class RastreabilidadeController {
 
     async getByLote(req: Request, res: Response, next: NextFunction) {
         try {
-            const loteId = req.params.id as string;
-            const lote = await this.rastreabilidadeService.getByLote(loteId);
+            const valor = req.params.valor as string;
+            const lote = await this.rastreabilidadeService.getByLote(valor);
 
             return res.status(200).json({ lote });
         } catch (error) {
@@ -29,9 +29,9 @@ export class RastreabilidadeController {
                 });
             }
 
-            const lotes = await this.rastreabilidadeService.getByInsumo(valor);
+            const resultado = await this.rastreabilidadeService.getByInsumo(valor);
 
-            return res.status(200).json({ lotes });
+            return res.status(200).json(resultado);
         } catch (error) {
             return next(error);
         }

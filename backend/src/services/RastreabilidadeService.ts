@@ -12,9 +12,25 @@ export class RastreabilidadeService {
         this.insumoRepo = appDataSource.getRepository(InsumoLote);
     }
 
-    async getByLote(loteId: string) {
+    private isUuid(value: string): boolean {
+        const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+        return uuidRegex.test(value);
+    }
+
+    async getByLote(idOuNumeroLote: string) {
+        const where = this.isUuid(idOuNumeroLote)
+            ? [
+                  { id: idOuNumeroLote },
+                  { numero_lote: idOuNumeroLote }
+              ]
+            : [
+                  { numero_lote: idOuNumeroLote }
+              ];
+
         const lote = await this.loteRepo.findOne({
-            where: { id: loteId },
+            where,
             relations: {
                 produto: true,
                 operador: true,
@@ -53,6 +69,17 @@ export class RastreabilidadeService {
             throw new AppError("Nenhum lote encontrado para esse insumo", 404);
         }
 
-        return insumos;
+        const primeiroInsumo = insumos[0];
+
+        const lotesAfetados = insumos.map((insumo) => insumo.lote);
+
+        return {
+            insumo: {
+                nome_insumo: primeiroInsumo.nome_insumo,
+                codigo_insumo: primeiroInsumo.codigo_insumo,
+                lote_insumo: primeiroInsumo.lote_insumo
+            },
+            lotesAfetados
+        };
     }
 }

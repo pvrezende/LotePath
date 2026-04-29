@@ -69,4 +69,47 @@ export class InspecaoService {
 
         return loteAtualizado;
     }
+
+    async delete(loteId: string) {
+        const lote = await this.loteRepo.findOne({
+            where: { id: loteId },
+            relations: {
+                inspecao: true,
+                produto: true,
+                operador: true,
+                insumos: true
+            }
+        });
+
+        if (!lote) {
+            throw new AppError("Lote não encontrado", 404);
+        }
+
+        if (!lote.inspecao) {
+            throw new AppError("Este lote não possui inspeção registrada", 404);
+        }
+
+        await this.inspecaoRepo.remove(lote.inspecao);
+
+        lote.quantidade_repr = 0;
+        lote.status = "aguardando_inspecao";
+        lote.encerrado_em = null;
+        lote.inspecao = null as any;
+
+        await this.loteRepo.save(lote);
+
+        const loteAtualizado = await this.loteRepo.findOne({
+            where: { id: lote.id },
+            relations: {
+                produto: true,
+                operador: true,
+                insumos: true,
+                inspecao: {
+                    inspetor: true
+                }
+            }
+        });
+
+        return loteAtualizado;
+    }
 }

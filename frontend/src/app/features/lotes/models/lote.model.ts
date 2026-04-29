@@ -27,6 +27,23 @@ export interface Lote {
     email: string;
     perfil: string;
   };
+  insumos?: {
+    id: string;
+    nome_insumo: string;
+    codigo_insumo: string;
+    lote_insumo: string;
+    quantidade: number;
+    unidade: string;
+  }[];
+  inspecao?: {
+    id: string;
+    resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado';
+    quantidade_repr: number;
+    descricao_desvio: string | null;
+    inspecionado_em: string;
+    loteId: string;
+    inspetorId: string;
+  };
 }
 
 export interface CreateLoteRequest {

@@ -44,6 +44,27 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'insumos',
+        loadComponent: () =>
+          import('./features/insumos/pages/insumos-lote/insumos-lote.component').then(
+            (m) => m.InsumosLoteComponent
+          ),
+      },
+      {
+        path: 'inspecao',
+        loadComponent: () =>
+          import('./features/inspecao/pages/inspecao-lote/inspecao-lote.component').then(
+            (m) => m.InspecaoLoteComponent
+          ),
+      },
+      {
+        path: 'rastreabilidade',
+        loadComponent: () =>
+          import(
+            './features/rastreabilidade/pages/rastreabilidade/rastreabilidade.component'
+          ).then((m) => m.RastreabilidadeComponent),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

@@ -6,7 +6,11 @@ import { validateBody } from "../middlewares/validateBody.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.js";
 import { Perfil } from "../types/Perfil.js";
-import { createLoteDTOSchema, updateStatusLoteDTOSchema } from "../dtos/LoteDTO.js";
+import {
+    createLoteDTOSchema,
+    updateLoteDTOSchema,
+    updateStatusLoteDTOSchema
+} from "../dtos/LoteDTO.js";
 
 const loteService = new LoteService(AppDataSource);
 const loteController = new LoteController(loteService);
@@ -32,6 +36,19 @@ loteRoutes.post(
     authorizeRoles(Perfil.OPERADOR, Perfil.GESTOR),
     validateBody(createLoteDTOSchema),
     loteController.create.bind(loteController)
+);
+
+loteRoutes.put(
+    "/:id",
+    authorizeRoles(Perfil.GESTOR),
+    validateBody(updateLoteDTOSchema),
+    loteController.update.bind(loteController)
+);
+
+loteRoutes.delete(
+    "/:id",
+    authorizeRoles(Perfil.GESTOR),
+    loteController.delete.bind(loteController)
 );
 
 loteRoutes.patch(

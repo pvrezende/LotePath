@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { LoteService } from "../services/LoteService.js";
-import { CreateLoteDTO, UpdateStatusLoteDTO } from "../dtos/LoteDTO.js";
+import { CreateLoteDTO, UpdateLoteDTO, UpdateStatusLoteDTO } from "../dtos/LoteDTO.js";
 
 export class LoteController {
     private loteService: LoteService;
@@ -39,6 +39,32 @@ export class LoteController {
             const lote = await this.loteService.create(data);
 
             return res.status(201).json({ lote });
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    async update(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const data = req.body as UpdateLoteDTO;
+            const lote = await this.loteService.update(id, data);
+
+            return res.status(200).json({ lote });
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+
+            await this.loteService.delete(id);
+
+            return res.status(200).json({
+                message: "Lote excluído com sucesso"
+            });
         } catch (error) {
             return next(error);
         }
