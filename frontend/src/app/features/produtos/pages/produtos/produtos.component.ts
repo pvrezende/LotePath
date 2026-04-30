@@ -4,11 +4,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProdutoService } from '../../services/produto.service';
 import { Produto } from '../../models/produto.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-produtos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    EmptyStateComponent,
+    ConfirmDialogComponent,
+  ],
   template: `
     <section class="produtos-page">
       <div class="hero-card">
@@ -16,8 +22,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           <span class="eyebrow">CADASTRO</span>
           <h2>Catálogo de produtos</h2>
           <p>
-            Cadastre, visualize e mantenha organizados os produtos utilizados na
-            abertura de lotes, com uma visão mais profissional do portfólio.
+            Cadastre, edite e organize os produtos utilizados na abertura de
+            lotes, mantendo o portfólio sempre atualizado.
           </p>
         </div>
 
@@ -32,11 +38,19 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         <section class="form-card">
           <div class="card-header">
             <div>
-              <h3>Novo produto</h3>
-              <p>Preencha os dados para adicionar um novo produto ao sistema.</p>
+              <h3>{{ editingProdutoId ? 'Editar produto' : 'Novo produto' }}</h3>
+              <p>
+                {{
+                  editingProdutoId
+                    ? 'Atualize os dados do produto selecionado.'
+                    : 'Preencha os dados para adicionar um novo produto ao sistema.'
+                }}
+              </p>
             </div>
 
-            <span class="card-chip">Cadastro</span>
+            <span class="card-chip">
+              {{ editingProdutoId ? 'Modo edição' : 'Cadastro' }}
+            </span>
           </div>
 
           <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()">
@@ -78,9 +92,27 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
               <div class="alert success">{{ successMessage }}</div>
             }
 
-            <button type="submit" class="primary-btn" [disabled]="saving">
-              {{ saving ? 'Salvando...' : 'Cadastrar produto' }}
-            </button>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn" [disabled]="saving">
+                {{
+                  saving
+                    ? 'Salvando...'
+                    : editingProdutoId
+                    ? 'Salvar alterações'
+                    : 'Cadastrar produto'
+                }}
+              </button>
+
+              @if (editingProdutoId) {
+                <button
+                  type="button"
+                  class="secondary-btn"
+                  (click)="cancelEdit()"
+                >
+                  Cancelar edição
+                </button>
+              }
+            </div>
           </form>
         </section>
 
@@ -88,7 +120,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           <div class="card-header">
             <div>
               <h3>Produtos cadastrados</h3>
-              <p>Consulte os produtos disponíveis para abertura de lotes.</p>
+              <p>Consulte, edite ou exclua produtos do catálogo.</p>
             </div>
 
             <div class="list-actions">
@@ -124,6 +156,24 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                     <span><b>Linha:</b> {{ produto.linha }}</span>
                     <span><b>Descrição:</b> {{ produto.descricao || 'Sem descrição.' }}</span>
                   </div>
+
+                  <div class="mobile-actions">
+                    <button
+                      type="button"
+                      class="edit-btn"
+                      (click)="startEdit(produto)"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      (click)="deleteProduto(produto)"
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </article>
               }
             </div>
@@ -136,6 +186,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                     <th>Nome</th>
                     <th>Linha</th>
                     <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,6 +204,25 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                           {{ produto.ativo ? 'Ativo' : 'Inativo' }}
                         </span>
                       </td>
+                      <td>
+                        <div class="table-actions">
+                          <button
+                            type="button"
+                            class="edit-btn"
+                            (click)="startEdit(produto)"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-btn"
+                            (click)="deleteProduto(produto)"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -166,6 +236,18 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           }
         </section>
       </div>
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir produto"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação de gestor"
+        confirmText="Excluir produto"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteProduto()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -257,7 +339,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       .form-card,
-      .list-card {
+      .list-card,
+      .feedback-box {
         border-radius: 24px;
         padding: 24px;
       }
@@ -367,14 +450,22 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       .primary-btn,
-      .secondary-btn {
-        height: 44px;
-        padding: 0 16px;
+      .secondary-btn,
+      .edit-btn,
+      .delete-btn {
+        height: 40px;
+        padding: 0 14px;
         border-radius: 12px;
         border: none;
         font-weight: 700;
         cursor: pointer;
         transition: 0.2s ease;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        height: 44px;
+        padding: 0 16px;
       }
 
       .primary-btn {
@@ -389,9 +480,29 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         border: 1px solid #e2e8f0;
       }
 
+      .edit-btn {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
       .primary-btn:hover,
-      .secondary-btn:hover {
+      .secondary-btn:hover,
+      .edit-btn:hover,
+      .delete-btn:hover {
         transform: translateY(-1px);
+      }
+
+      .form-actions,
+      .table-actions,
+      .mobile-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .feedback-box {
@@ -558,6 +669,11 @@ export class ProdutosComponent implements OnInit {
   private produtoService = inject(ProdutoService);
 
   produtos: Produto[] = [];
+  editingProdutoId: string | null = null;
+  produtoPendingDelete: Produto | null = null;
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
+
   loading = true;
   saving = false;
   errorMessage = '';
@@ -603,22 +719,22 @@ export class ProdutosComponent implements OnInit {
     const payload = {
       codigo: this.produtoForm.value.codigo ?? '',
       nome: this.produtoForm.value.nome ?? '',
-      descricao: this.produtoForm.value.descricao ?? '',
+      descricao: this.produtoForm.value.descricao?.trim() || null,
       linha: this.produtoForm.value.linha ?? '',
       ativo: this.produtoForm.value.ativo ?? true,
     };
 
-    this.produtoService.createProduto(payload).subscribe({
+    const request$ = this.editingProdutoId
+      ? this.produtoService.updateProduto(this.editingProdutoId, payload)
+      : this.produtoService.createProduto(payload);
+
+    request$.subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Produto cadastrado com sucesso.';
-        this.produtoForm.reset({
-          codigo: '',
-          nome: '',
-          descricao: '',
-          linha: '',
-          ativo: true,
-        });
+        this.successMessage = this.editingProdutoId
+          ? 'Produto atualizado com sucesso.'
+          : 'Produto cadastrado com sucesso.';
+        this.cancelEdit();
         this.loadProdutos();
       },
       error: (error) => {
@@ -631,11 +747,96 @@ export class ProdutosComponent implements OnInit {
 
         if (error.status === 403) {
           this.errorMessage =
-            'Seu perfil não tem permissão para cadastrar produtos.';
+            'Seu perfil não tem permissão para salvar produtos.';
           return;
         }
 
-        this.errorMessage = 'Erro ao cadastrar produto.';
+        if (error.status === 400) {
+          this.errorMessage =
+            'Dados inválidos. Verifique os campos preenchidos.';
+          return;
+        }
+
+        this.errorMessage = this.editingProdutoId
+          ? 'Erro ao atualizar produto.'
+          : 'Erro ao cadastrar produto.';
+      },
+    });
+  }
+
+  startEdit(produto: Produto): void {
+    this.editingProdutoId = produto.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.produtoForm.patchValue({
+      codigo: produto.codigo,
+      nome: produto.nome,
+      descricao: produto.descricao ?? '',
+      linha: produto.linha,
+      ativo: produto.ativo,
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.editingProdutoId = null;
+    this.produtoForm.reset({
+      codigo: '',
+      nome: '',
+      descricao: '',
+      linha: '',
+      ativo: true,
+    });
+  }
+
+  deleteProduto(produto: Produto): void {
+    this.produtoPendingDelete = produto;
+    this.confirmDialogMessage = `Tem certeza que deseja excluir o produto ${produto.codigo} - ${produto.nome}? Essa ação não poderá ser desfeita.`;
+    this.confirmDialogOpen = true;
+  }
+
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.produtoPendingDelete = null;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteProduto(): void {
+    if (!this.produtoPendingDelete) return;
+
+    const produto = this.produtoPendingDelete;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.closeConfirmDialog();
+
+    this.produtoService.deleteProduto(produto.id).subscribe({
+      next: (response) => {
+        this.successMessage = response.message || 'Produto excluído com sucesso.';
+
+        if (this.editingProdutoId === produto.id) {
+          this.cancelEdit();
+        }
+
+        this.loadProdutos();
+      },
+      error: (error) => {
+        if (error.status === 403) {
+          this.errorMessage =
+            'Seu perfil não tem permissão para excluir produtos.';
+          return;
+        }
+
+        if (error.status === 409) {
+          this.errorMessage =
+            error.error?.message ||
+            'Não é possível excluir este produto porque ele possui lotes vinculados.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao excluir produto.';
       },
     });
   }

@@ -14,3 +14,11 @@ export interface CreateProdutoRequest {
   linha: string;
   ativo: boolean;
 }
+
+export interface UpdateProdutoRequest {
+  codigo?: string;
+  nome?: string;
+  descricao?: string | null;
+  linha?: string;
+  ativo?: boolean;
+}
