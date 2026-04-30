@@ -10,8 +10,6 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { LoteTimelineComponent } from '../../../../shared/components/lote-timeline/lote-timeline.component';
-import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
-import { AuditLog } from '../../../auditoria/models/audit-log.model';
 
 type LoteStatusFilter =
   | 'todos'
@@ -320,14 +318,6 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
                             Detalhes
                           </button>
 
-                          <button
-                            type="button"
-                            class="pdf-btn"
-                            (click)="downloadPdf(lote)"
-                          >
-                            PDF
-                          </button>
-
                           @if (isGestor) {
                             <button
                               type="button"
@@ -441,7 +431,6 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
 
             <app-lote-timeline
               [lote]="selectedLote"
-              [auditLogs]="auditLogs"
             />
           </div>
         </div>
@@ -736,11 +725,6 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
         color: #0369a1;
       }
 
-      .pdf-btn {
-        background: #dcfce7;
-        color: #15803d;
-      }
-
       .edit-btn {
         background: #fef3c7;
         color: #b45309;
@@ -754,7 +738,6 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
       .primary-btn:hover,
       .secondary-btn:hover,
       .details-btn:hover,
-      .pdf-btn:hover,
       .edit-btn:hover,
       .delete-btn:hover {
         transform: translateY(-1px);
@@ -1009,11 +992,9 @@ export class LotesComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private loteService = inject(LoteService);
   private authService = inject(AuthService);
-  private auditoriaService = inject(AuditoriaService);
 
   produtos: Produto[] = [];
   lotes: Lote[] = [];
-  auditLogs: AuditLog[] = [];
 
   searchTerm = signal('');
   statusFilter = signal<LoteStatusFilter>('todos');
@@ -1068,18 +1049,6 @@ export class LotesComponent implements OnInit {
   ngOnInit(): void {
     this.loadProdutos();
     this.loadLotes();
-    this.loadAuditLogs();
-  }
-
-  loadAuditLogs(): void {
-    this.auditoriaService.getLogs().subscribe({
-      next: (response) => {
-        this.auditLogs = response.data;
-      },
-      error: () => {
-        this.auditLogs = [];
-      },
-    });
   }
 
   loadProdutos(): void {
@@ -1201,22 +1170,6 @@ export class LotesComponent implements OnInit {
     });
   }
 
-  downloadPdf(lote: Lote): void {
-    this.loteService.downloadLotePdf(lote.id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `relatorio-${lote.numero_lote}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => {
-        this.errorMessage = 'Erro ao gerar PDF do lote.';
-      },
-    });
-  }
-
   deleteLote(lote: Lote): void {
     if (!this.isGestor) return;
 
@@ -1264,7 +1217,6 @@ export class LotesComponent implements OnInit {
   }
 
   openDetails(lote: Lote): void {
-    this.loadAuditLogs();
     this.selectedLote = lote;
     document.body.classList.add('modal-open');
   }

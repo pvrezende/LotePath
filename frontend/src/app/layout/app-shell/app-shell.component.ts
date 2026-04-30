@@ -107,7 +107,17 @@ import { PermissionService } from '../../core/services/permission.service';
               <span>Usuários</span>
             </a>
           }
-        </nav>
+                    <a
+              routerLink="/app/auditoria"
+              routerLinkActive="active"
+              *ngIf="canManageUsuarios"
+              (click)="closeMobileMenu()"
+            >
+              <span class="nav-icon">🧾</span>
+              <span>Auditoria</span>
+            </a>
+
+          </nav>
 
         <div class="sidebar-footer">
           <div class="user-card">
@@ -615,6 +625,7 @@ export class AppShellComponent {
     if (url.includes('/app/insumos')) return 'Insumos';
     if (url.includes('/app/inspecao')) return 'Inspeção';
     if (url.includes('/app/rastreabilidade')) return 'Rastreabilidade';
+    if (url.includes('/app/auditoria')) return 'Auditoria';
     if (url.includes('/app/usuarios')) return 'Usuários';
     if (url.includes('/app/dashboard')) return 'Dashboard';
 

@@ -7,9 +7,6 @@ import { InspecaoService } from '../../services/inspecao.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { AuthService } from '../../../../core/services/auth.service';
-import { AuditTableComponent } from '../../../../shared/components/audit-table/audit-table.component';
-import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
-import { AuditLog } from '../../../auditoria/models/audit-log.model';
 import { PermissionService } from '../../../../core/services/permission.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -21,7 +18,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
-    AuditTableComponent,
     ConfirmDialogComponent,
   ],
   template: `
@@ -219,12 +215,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           }
         </section>
       </div>
-
-      <app-audit-table
-        [logs]="auditLogs"
-        title="Auditoria de inspeções"
-        description="Histórico de quem registrou ou excluiu inspeções dos lotes."
-      />
 
       <app-confirm-dialog
         [open]="confirmDialogOpen"
@@ -548,13 +538,11 @@ export class InspecaoLoteComponent implements OnInit {
   private loteService = inject(LoteService);
   private inspecaoService = inject(InspecaoService);
   private authService = inject(AuthService);
-  private auditoriaService = inject(AuditoriaService);
   private permissionService = inject(PermissionService);
 
   lotes: Lote[] = [];
   selectedLoteId = '';
   selectedLote: Lote | null = null;
-  auditLogs: AuditLog[] = [];
   confirmDialogOpen = false;
   confirmDialogMessage = '';
 
@@ -579,7 +567,6 @@ export class InspecaoLoteComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLotes();
-    this.loadAuditLogs();
   }
 
   loadLotes(): void {
@@ -589,17 +576,6 @@ export class InspecaoLoteComponent implements OnInit {
       },
       error: () => {
         this.errorMessage = 'Não foi possível carregar os lotes.';
-      },
-    });
-  }
-
-  loadAuditLogs(): void {
-    this.auditoriaService.getLogs('inspecao').subscribe({
-      next: (response) => {
-        this.auditLogs = response.data;
-      },
-      error: () => {
-        this.auditLogs = [];
       },
     });
   }
@@ -688,7 +664,6 @@ export class InspecaoLoteComponent implements OnInit {
         this.saving = false;
         this.successMessage = 'Inspeção registrada com sucesso.';
         this.selectedLote = response.lote;
-        this.loadAuditLogs();
       },
       error: (error) => {
         this.saving = false;
@@ -739,7 +714,6 @@ export class InspecaoLoteComponent implements OnInit {
         this.deleting = false;
         this.successMessage = response.message;
         this.selectedLote = response.lote;
-        this.loadAuditLogs();
       },
       error: (error) => {
         this.deleting = false;

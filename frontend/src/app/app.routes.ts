@@ -72,6 +72,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'auditoria',
+        loadChildren: () =>
+          import('./features/auditoria/auditoria.routes').then(
+            (m) => m.AUDITORIA_ROUTES
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

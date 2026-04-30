@@ -6,9 +6,6 @@ import { Lote } from '../../../lotes/models/lote.model';
 import { InsumoLoteService } from '../../services/insumo-lote.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
-import { AuditTableComponent } from '../../../../shared/components/audit-table/audit-table.component';
-import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
-import { AuditLog } from '../../../auditoria/models/audit-log.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -19,7 +16,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
-    AuditTableComponent,
     ConfirmDialogComponent,
   ],
   template: `
@@ -219,12 +215,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           }
         </section>
       </div>
-
-      <app-audit-table
-        [logs]="auditLogs"
-        title="Auditoria de insumos"
-        description="Histórico de quem adicionou ou removeu insumos dos lotes."
-      />
 
       <app-confirm-dialog
         [open]="confirmDialogOpen"
@@ -548,12 +538,10 @@ export class InsumosLoteComponent implements OnInit {
   private fb = inject(FormBuilder);
   private loteService = inject(LoteService);
   private insumoLoteService = inject(InsumoLoteService);
-  private auditoriaService = inject(AuditoriaService);
 
   lotes: Lote[] = [];
   selectedLoteId = '';
   selectedLote: Lote | null = null;
-  auditLogs: AuditLog[] = [];
   insumoPendingDeleteId = '';
   confirmDialogOpen = false;
   confirmDialogMessage = '';
@@ -572,7 +560,6 @@ export class InsumosLoteComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLotes();
-    this.loadAuditLogs();
   }
 
   loadLotes(): void {
@@ -582,17 +569,6 @@ export class InsumosLoteComponent implements OnInit {
       },
       error: () => {
         this.errorMessage = 'Não foi possível carregar os lotes.';
-      },
-    });
-  }
-
-  loadAuditLogs(): void {
-    this.auditoriaService.getLogs('insumos').subscribe({
-      next: (response) => {
-        this.auditLogs = response.data;
-      },
-      error: () => {
-        this.auditLogs = [];
       },
     });
   }
@@ -665,7 +641,6 @@ export class InsumosLoteComponent implements OnInit {
           unidade: '',
         });
         this.refreshSelectedLote();
-        this.loadAuditLogs();
       },
       error: (error: any) => {
         this.saving = false;
@@ -715,7 +690,6 @@ export class InsumosLoteComponent implements OnInit {
         next: () => {
           this.successMessage = 'Insumo removido com sucesso.';
           this.refreshSelectedLote();
-          this.loadAuditLogs();
         },
         error: () => {
           this.errorMessage = 'Erro ao remover o insumo do lote.';
