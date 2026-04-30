@@ -141,8 +141,9 @@ import { PermissionService } from '../../core/services/permission.service';
           </button>
 
           <div class="topbar-title">
-            <strong>Sistema de rastreamento de produção</strong>
-            <span>Controle produtivo, inspeção, insumos e recall</span>
+            <span class="current-page-label">Tela atual</span>
+            <strong>{{ currentPageTitle }}</strong>
+            <span>Sistema de rastreamento de produção</span>
           </div>
 
           <div class="topbar-user">
@@ -170,7 +171,7 @@ import { PermissionService } from '../../core/services/permission.service';
         min-height: 100vh;
         width: 100%;
         display: grid;
-        grid-template-columns: 300px minmax(0, 1fr);
+        grid-template-columns: 280px minmax(0, 1fr);
         background:
           radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 30%),
           linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
@@ -210,7 +211,7 @@ import { PermissionService } from '../../core/services/permission.service';
       }
 
       .sidebar-logo {
-        width: 210px;
+        width: 190px;
         max-width: 100%;
         height: auto;
         object-fit: contain;
@@ -220,7 +221,7 @@ import { PermissionService } from '../../core/services/permission.service';
       .sidebar-title h1 {
         margin: 8px 0 2px;
         color: #0f172a;
-        font-size: 28px;
+        font-size: 26px;
         line-height: 1;
         font-weight: 900;
         letter-spacing: -0.04em;
@@ -370,11 +371,19 @@ import { PermissionService } from '../../core/services/permission.service';
         gap: 2px;
       }
 
+      .current-page-label {
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
       .topbar-title strong {
         color: #0f172a;
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 900;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
       }
 
       .topbar-title span {
@@ -423,24 +432,62 @@ import { PermissionService } from '../../core/services/permission.service';
         flex: 1;
         width: 100%;
         min-width: 0;
-        padding: 20px;
+        padding: 16px;
       }
 
       .mobile-backdrop {
         display: none;
       }
 
-      @media (max-width: 1180px) {
+      @media (max-width: 1280px) {
         .app-shell {
-          grid-template-columns: 280px minmax(0, 1fr);
+          grid-template-columns: 250px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          padding: 12px;
+          gap: 14px;
+        }
+
+        .sidebar-brand {
+          padding: 14px 12px;
+          border-radius: 20px;
         }
 
         .sidebar-logo {
-          width: 190px;
+          width: 150px;
+        }
+
+        .sidebar-title h1 {
+          font-size: 24px;
+        }
+
+        .sidebar-title p {
+          font-size: 12px;
+        }
+
+        .sidebar-nav a {
+          min-height: 44px;
+          padding: 0 12px;
+          font-size: 14px;
+        }
+
+        .nav-icon {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
+        }
+
+        .topbar {
+          margin: 12px 12px 0;
+        }
+
+        .content-area {
+          padding: 12px;
         }
       }
 
-      @media (max-width: 920px) {
+      @media (max-width: 1100px) {
         .app-shell {
           display: block;
         }
@@ -448,7 +495,7 @@ import { PermissionService } from '../../core/services/permission.service';
         .sidebar {
           position: fixed;
           inset: 0 auto 0 0;
-          width: min(320px, calc(100vw - 34px));
+          width: min(310px, calc(100vw - 30px));
           transform: translateX(-104%);
           transition: transform 0.24s ease, box-shadow 0.2s ease;
           border-right: 1px solid #e2e8f0;
@@ -475,6 +522,8 @@ import { PermissionService } from '../../core/services/permission.service';
         .topbar {
           margin: 10px 10px 0;
           border-radius: 18px;
+          min-height: 64px;
+          padding: 12px 14px;
         }
 
         .topbar-user {
@@ -531,6 +580,20 @@ export class AppShellComponent {
     return this.user?.perfil ?? 'perfil';
   }
 
+  get currentPageTitle(): string {
+    const url = this.router.url;
+
+    if (url.includes('/app/produtos')) return 'Produtos';
+    if (url.includes('/app/lotes')) return 'Lotes';
+    if (url.includes('/app/insumos')) return 'Insumos';
+    if (url.includes('/app/inspecao')) return 'Inspeção';
+    if (url.includes('/app/rastreabilidade')) return 'Rastreabilidade';
+    if (url.includes('/app/usuarios')) return 'Usuários';
+    if (url.includes('/app/dashboard')) return 'Dashboard';
+
+    return 'LotePath';
+  }
+
   get canManageProdutos(): boolean {
     return this.permissionService.hasPermission('canManageProdutos');
   }
@@ -557,7 +620,7 @@ export class AppShellComponent {
 
   @HostListener('window:resize')
   onResize(): void {
-    if (window.innerWidth > 920 && this.mobileMenuOpen) {
+    if (window.innerWidth > 1100 && this.mobileMenuOpen) {
       this.mobileMenuOpen = false;
     }
   }

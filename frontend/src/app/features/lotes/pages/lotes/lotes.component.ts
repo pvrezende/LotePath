@@ -9,6 +9,9 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LoteTimelineComponent } from '../../../../shared/components/lote-timeline/lote-timeline.component';
+import { AuditoriaService } from '../../../auditoria/services/auditoria.service';
+import { AuditLog } from '../../../auditoria/models/audit-log.model';
 
 type LoteStatusFilter =
   | 'todos'
@@ -30,6 +33,7 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
     EmptyStateComponent,
     StatusBadgeComponent,
     ConfirmDialogComponent,
+    LoteTimelineComponent,
   ],
   template: `
     <section class="lotes-page">
@@ -426,6 +430,11 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
                 </p>
               </div>
             </div>
+
+            <app-lote-timeline
+              [lote]="selectedLote"
+              [auditLogs]="auditLogs"
+            />
           </div>
         </div>
       }
@@ -986,9 +995,11 @@ export class LotesComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private loteService = inject(LoteService);
   private authService = inject(AuthService);
+  private auditoriaService = inject(AuditoriaService);
 
   produtos: Produto[] = [];
   lotes: Lote[] = [];
+  auditLogs: AuditLog[] = [];
 
   searchTerm = signal('');
   statusFilter = signal<LoteStatusFilter>('todos');
@@ -1043,6 +1054,18 @@ export class LotesComponent implements OnInit {
   ngOnInit(): void {
     this.loadProdutos();
     this.loadLotes();
+    this.loadAuditLogs();
+  }
+
+  loadAuditLogs(): void {
+    this.auditoriaService.getLogs().subscribe({
+      next: (response) => {
+        this.auditLogs = response.data;
+      },
+      error: () => {
+        this.auditLogs = [];
+      },
+    });
   }
 
   loadProdutos(): void {
@@ -1211,6 +1234,7 @@ export class LotesComponent implements OnInit {
   }
 
   openDetails(lote: Lote): void {
+    this.loadAuditLogs();
     this.selectedLote = lote;
     document.body.classList.add('modal-open');
   }

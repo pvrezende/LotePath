@@ -484,3 +484,259 @@ body::selection {
     padding: 11px 12px;
   }
 }
+
+
+/* =========================================================
+   LotePath - Ajustes globais de responsividade
+   Mantém as telas utilizáveis em notebook, metade da tela,
+   tablets e celulares.
+========================================================= */
+
+html,
+body,
+app-root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+app-app-shell,
+app-dashboard,
+app-produtos,
+app-lotes,
+app-insumos-lote,
+app-inspecao-lote,
+app-rastreabilidade,
+app-usuarios {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-page,
+.produtos-page,
+.lotes-page,
+.insumos-page,
+.inspecao-page,
+.rastreabilidade-page,
+.usuarios-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.hero-card,
+.filter-card,
+.form-card,
+.list-card,
+.table-section,
+.feedback-box,
+.filters-card,
+.modal-card,
+.audit-card,
+.timeline-card {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.hero-content,
+.hero-copy,
+.card-header,
+.section-header,
+.filter-header,
+.timeline-header,
+.audit-header {
+  min-width: 0 !important;
+}
+
+.table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+
+table {
+  min-width: 680px;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .hero-card {
+    padding: 24px !important;
+  }
+
+  .hero-copy h2,
+  .hero-card h2 {
+    font-size: clamp(28px, 4vw, 38px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .hero-copy p,
+  .hero-card p {
+    max-width: 100% !important;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filters-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero-card,
+  .filter-card,
+  .form-card,
+  .list-card,
+  .table-section,
+  .feedback-box,
+  .modal-card,
+  .audit-card,
+  .timeline-card {
+    border-radius: 20px !important;
+    padding: 20px !important;
+  }
+
+  .hero-content,
+  .hero-card,
+  .card-header,
+  .section-header,
+  .audit-header,
+  .timeline-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .hero-highlight,
+  .hero-badge {
+    width: 100% !important;
+    max-width: 260px !important;
+  }
+
+  .filter-grid,
+  .filters-card,
+  .summary-grid,
+  .modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-actions,
+  .form-actions,
+  .table-actions,
+  .mobile-actions,
+  .list-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .filter-actions button,
+  .form-actions button,
+  .mobile-actions button {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .desktop-table {
+    display: none !important;
+  }
+
+  .mobile-lote-list,
+  .mobile-product-list {
+    display: flex !important;
+  }
+
+  table {
+    min-width: 640px;
+  }
+
+  .hero-card,
+  .filter-card,
+  .form-card,
+  .list-card,
+  .table-section,
+  .feedback-box,
+  .modal-card,
+  .audit-card,
+  .timeline-card {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .quick-filters {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .quick-btn {
+    width: 100% !important;
+  }
+
+  .hero-badge,
+  .hero-highlight {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-copy h2,
+  .hero-card h2 {
+    font-size: 26px !important;
+  }
+
+  .card-header h3,
+  .section-header h3 {
+    font-size: 22px !important;
+  }
+
+  .quick-filters {
+    grid-template-columns: 1fr !important;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .edit-btn,
+  .delete-btn,
+  .clear-btn,
+  .remove-btn {
+    width: 100% !important;
+  }
+
+  .form-actions,
+  .table-actions,
+  .mobile-actions {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 380px) {
+  html,
+  body {
+    font-size: 13px;
+  }
+
+  .hero-copy h2,
+  .hero-card h2 {
+    font-size: 23px !important;
+  }
+
+  .card-header h3,
+  .section-header h3 {
+    font-size: 20px !important;
+  }
+}
