@@ -70,7 +70,7 @@ Sem um sistema centralizado, esse processo costuma depender de papel, planilhas 
 - CSS
 
 ### Backend
-- Node.js
+- Node.js 20.19+ ou 22+
 - Express
 - TypeScript
 - TypeORM
@@ -116,6 +116,13 @@ Antes de executar o projeto, é necessário ter instalado na máquina:
 - PostgreSQL
 - Angular CLI (opcional, caso utilize `ng serve` diretamente)
 
+## Caso ocorra erro no Angular CLI
+
+Execute:
+
+```bash
+npm install -g @angular/cli
+
 ## Como executar o backend
 
 ### 1. Entre na pasta do backend
@@ -138,7 +145,7 @@ Exemplo:
 
 ```env
 # Banco de dados
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=postgres
 DB_PASS=sua_senha
@@ -148,10 +155,13 @@ DB_NAME=indt_lotepath
 PORT=5336
 JWT_SECRET=sua_chave_jwt
 ```
+Recomendado usar 127.0.0.1 para evitar problemas de resolução de localhost.
 
 ### 4. Crie automaticamente o banco de dados
 
-Com o PostgreSQL instalado e rodando, execute:
+Certifique-se de que o serviço do PostgreSQL está ativo antes de rodar o projeto.
+
+Execute:
 
 ```bash
 npm run db:create
@@ -205,8 +215,10 @@ src/environments/environment.development.ts
 Valor padrão:
 
 ```ts
-apiUrl: 'http://localhost:5336'
+apiUrl: 'http://127.0.0.1:5336'
 ```
+- Recomendado usar 127.0.0.1 para evitar inconsistências com localhost.
+
 
 ### 4. Inicie o frontend
 

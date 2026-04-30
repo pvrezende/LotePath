@@ -1,14 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProdutoService } from '../../services/produto.service';
 import { Produto } from '../../models/produto.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+
+type StatusFilter = 'todos' | 'ativos' | 'inativos';
 
 @Component({
   selector: 'app-produtos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    EmptyStateComponent,
+    ConfirmDialogComponent,
+  ],
   template: `
     <section class="produtos-page">
       <div class="hero-card">
@@ -16,15 +25,15 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           <span class="eyebrow">CADASTRO</span>
           <h2>Catálogo de produtos</h2>
           <p>
-            Cadastre, visualize e mantenha organizados os produtos utilizados na
-            abertura de lotes, com uma visão mais profissional do portfólio.
+            Cadastre, edite, exclua e filtre os produtos utilizados na abertura
+            de lotes, mantendo o portfólio sempre atualizado.
           </p>
         </div>
 
         <div class="hero-badge">
           <span class="hero-label">Produtos cadastrados</span>
-          <strong>{{ produtos.length }}</strong>
-          <small>itens disponíveis</small>
+          <strong>{{ produtosFiltrados().length }}</strong>
+          <small>de {{ produtos.length }} cadastrado(s)</small>
         </div>
       </div>
 
@@ -32,11 +41,19 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         <section class="form-card">
           <div class="card-header">
             <div>
-              <h3>Novo produto</h3>
-              <p>Preencha os dados para adicionar um novo produto ao sistema.</p>
+              <h3>{{ editingProdutoId ? 'Editar produto' : 'Novo produto' }}</h3>
+              <p>
+                {{
+                  editingProdutoId
+                    ? 'Atualize os dados do produto selecionado.'
+                    : 'Preencha os dados para adicionar um novo produto ao sistema.'
+                }}
+              </p>
             </div>
 
-            <span class="card-chip">Cadastro</span>
+            <span class="card-chip">
+              {{ editingProdutoId ? 'Modo edição' : 'Cadastro' }}
+            </span>
           </div>
 
           <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()">
@@ -78,9 +95,27 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
               <div class="alert success">{{ successMessage }}</div>
             }
 
-            <button type="submit" class="primary-btn" [disabled]="saving">
-              {{ saving ? 'Salvando...' : 'Cadastrar produto' }}
-            </button>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn" [disabled]="saving">
+                {{
+                  saving
+                    ? 'Salvando...'
+                    : editingProdutoId
+                    ? 'Salvar alterações'
+                    : 'Cadastrar produto'
+                }}
+              </button>
+
+              @if (editingProdutoId) {
+                <button
+                  type="button"
+                  class="secondary-btn"
+                  (click)="cancelEdit()"
+                >
+                  Cancelar edição
+                </button>
+              }
+            </div>
           </form>
         </section>
 
@@ -88,15 +123,47 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
           <div class="card-header">
             <div>
               <h3>Produtos cadastrados</h3>
-              <p>Consulte os produtos disponíveis para abertura de lotes.</p>
+              <p>Consulte, filtre, edite ou exclua produtos do catálogo.</p>
             </div>
 
             <div class="list-actions">
-              <span class="card-chip">{{ produtos.length }} produto(s)</span>
+              <span class="card-chip">{{ produtosFiltrados().length }} produto(s)</span>
               <button type="button" class="secondary-btn" (click)="loadProdutos()">
                 Atualizar
               </button>
             </div>
+          </div>
+
+
+
+          <div class="filters-card">
+            <div class="filter-group search-group">
+              <label for="searchTerm">Buscar produto</label>
+              <input
+                id="searchTerm"
+                type="text"
+                [ngModel]="searchTerm()"
+                (ngModelChange)="searchTerm.set($event)"
+                placeholder="Busque por código, nome ou linha"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="statusFilter">Status</label>
+              <select
+                id="statusFilter"
+                [ngModel]="statusFilter()"
+                (ngModelChange)="statusFilter.set($event)"
+              >
+                <option value="todos">Todos</option>
+                <option value="ativos">Ativos</option>
+                <option value="inativos">Inativos</option>
+              </select>
+            </div>
+
+            <button type="button" class="clear-btn" (click)="clearFilters()">
+              Limpar filtros
+            </button>
           </div>
 
           @if (loading) {
@@ -104,9 +171,9 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
               <div class="loading-line"></div>
               <p>Carregando produtos...</p>
             </div>
-          } @else if (produtos.length > 0) {
+          } @else if (produtosFiltrados().length > 0) {
             <div class="mobile-product-list">
-              @for (produto of produtos; track produto.id) {
+              @for (produto of produtosFiltrados(); track produto.id) {
                 <article class="mobile-product-card">
                   <div class="mobile-product-top">
                     <strong>{{ produto.codigo }}</strong>
@@ -124,6 +191,24 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                     <span><b>Linha:</b> {{ produto.linha }}</span>
                     <span><b>Descrição:</b> {{ produto.descricao || 'Sem descrição.' }}</span>
                   </div>
+
+                  <div class="mobile-actions">
+                    <button
+                      type="button"
+                      class="edit-btn"
+                      (click)="startEdit(produto)"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      (click)="deleteProduto(produto)"
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </article>
               }
             </div>
@@ -136,10 +221,11 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                     <th>Nome</th>
                     <th>Linha</th>
                     <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (produto of produtos; track produto.id) {
+                  @for (produto of produtosFiltrados(); track produto.id) {
                     <tr>
                       <td class="strong">{{ produto.codigo }}</td>
                       <td>{{ produto.nome }}</td>
@@ -153,6 +239,25 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
                           {{ produto.ativo ? 'Ativo' : 'Inativo' }}
                         </span>
                       </td>
+                      <td>
+                        <div class="table-actions">
+                          <button
+                            type="button"
+                            class="edit-btn"
+                            (click)="startEdit(produto)"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-btn"
+                            (click)="deleteProduto(produto)"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -160,12 +265,24 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
             </div>
           } @else {
             <app-empty-state
-              title="Nenhum produto cadastrado"
-              description="Cadastre o primeiro produto para começar a abrir lotes no sistema."
+              title="Nenhum produto encontrado"
+              description="Ajuste os filtros ou cadastre um novo produto."
             />
           }
         </section>
       </div>
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir produto"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação de gestor"
+        confirmText="Excluir produto"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteProduto()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -179,7 +296,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       .hero-card,
       .form-card,
       .list-card,
-      .feedback-box {
+      .feedback-box,
+      .filters-card {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(226, 232, 240, 0.95);
         box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
@@ -257,7 +375,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       .form-card,
-      .list-card {
+      .list-card,
+      .feedback-box {
         border-radius: 24px;
         padding: 24px;
       }
@@ -303,6 +422,23 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         flex-wrap: wrap;
       }
 
+
+      .filters-card {
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 180px auto;
+        gap: 14px;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
       .form-group {
         margin-bottom: 14px;
       }
@@ -315,7 +451,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       input,
-      textarea {
+      textarea,
+      select {
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 12px;
@@ -326,7 +463,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       input:focus,
-      textarea:focus {
+      textarea:focus,
+      select:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
       }
@@ -367,14 +505,23 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       }
 
       .primary-btn,
-      .secondary-btn {
-        height: 44px;
-        padding: 0 16px;
+      .secondary-btn,
+      .edit-btn,
+      .delete-btn,
+      .clear-btn {
+        height: 40px;
+        padding: 0 14px;
         border-radius: 12px;
         border: none;
         font-weight: 700;
         cursor: pointer;
         transition: 0.2s ease;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        height: 44px;
+        padding: 0 16px;
       }
 
       .primary-btn {
@@ -383,15 +530,38 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
       }
 
-      .secondary-btn {
+      .secondary-btn,
+      .clear-btn {
         background: #f1f5f9;
         color: #0f172a;
         border: 1px solid #e2e8f0;
       }
 
+      .edit-btn {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .delete-btn,
+      .clear-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
       .primary-btn:hover,
-      .secondary-btn:hover {
+      .secondary-btn:hover,
+      .edit-btn:hover,
+      .delete-btn:hover,
+      .clear-btn:hover {
         transform: translateY(-1px);
+      }
+
+      .form-actions,
+      .table-actions,
+      .mobile-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .feedback-box {
@@ -517,6 +687,10 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
         .content-grid {
           grid-template-columns: 1fr;
         }
+
+        .filters-card {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 768px) {
@@ -558,6 +732,34 @@ export class ProdutosComponent implements OnInit {
   private produtoService = inject(ProdutoService);
 
   produtos: Produto[] = [];
+  editingProdutoId: string | null = null;
+  produtoPendingDelete: Produto | null = null;
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
+
+  searchTerm = signal('');
+  statusFilter = signal<StatusFilter>('todos');
+
+  produtosFiltrados = computed(() => {
+    const term = this.normalize(this.searchTerm());
+    const status = this.statusFilter();
+
+    return this.produtos.filter((produto) => {
+      const matchesTerm =
+        !term ||
+        this.normalize(produto.codigo).includes(term) ||
+        this.normalize(produto.nome).includes(term) ||
+        this.normalize(produto.linha).includes(term);
+
+      const matchesStatus =
+        status === 'todos' ||
+        (status === 'ativos' && produto.ativo) ||
+        (status === 'inativos' && !produto.ativo);
+
+      return matchesTerm && matchesStatus;
+    });
+  });
+
   loading = true;
   saving = false;
   errorMessage = '';
@@ -603,22 +805,22 @@ export class ProdutosComponent implements OnInit {
     const payload = {
       codigo: this.produtoForm.value.codigo ?? '',
       nome: this.produtoForm.value.nome ?? '',
-      descricao: this.produtoForm.value.descricao ?? '',
+      descricao: this.produtoForm.value.descricao?.trim() || null,
       linha: this.produtoForm.value.linha ?? '',
       ativo: this.produtoForm.value.ativo ?? true,
     };
 
-    this.produtoService.createProduto(payload).subscribe({
+    const request$ = this.editingProdutoId
+      ? this.produtoService.updateProduto(this.editingProdutoId, payload)
+      : this.produtoService.createProduto(payload);
+
+    request$.subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Produto cadastrado com sucesso.';
-        this.produtoForm.reset({
-          codigo: '',
-          nome: '',
-          descricao: '',
-          linha: '',
-          ativo: true,
-        });
+        this.successMessage = this.editingProdutoId
+          ? 'Produto atualizado com sucesso.'
+          : 'Produto cadastrado com sucesso.';
+        this.cancelEdit();
         this.loadProdutos();
       },
       error: (error) => {
@@ -631,12 +833,110 @@ export class ProdutosComponent implements OnInit {
 
         if (error.status === 403) {
           this.errorMessage =
-            'Seu perfil não tem permissão para cadastrar produtos.';
+            'Seu perfil não tem permissão para salvar produtos.';
           return;
         }
 
-        this.errorMessage = 'Erro ao cadastrar produto.';
+        if (error.status === 400) {
+          this.errorMessage =
+            'Dados inválidos. Verifique os campos preenchidos.';
+          return;
+        }
+
+        this.errorMessage = this.editingProdutoId
+          ? 'Erro ao atualizar produto.'
+          : 'Erro ao cadastrar produto.';
       },
     });
+  }
+
+  startEdit(produto: Produto): void {
+    this.editingProdutoId = produto.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.produtoForm.patchValue({
+      codigo: produto.codigo,
+      nome: produto.nome,
+      descricao: produto.descricao ?? '',
+      linha: produto.linha,
+      ativo: produto.ativo,
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit(): void {
+    this.editingProdutoId = null;
+    this.produtoForm.reset({
+      codigo: '',
+      nome: '',
+      descricao: '',
+      linha: '',
+      ativo: true,
+    });
+  }
+
+  deleteProduto(produto: Produto): void {
+    this.produtoPendingDelete = produto;
+    this.confirmDialogMessage = `Tem certeza que deseja excluir o produto ${produto.codigo} - ${produto.nome}? Essa ação não poderá ser desfeita.`;
+    this.confirmDialogOpen = true;
+  }
+
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.produtoPendingDelete = null;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteProduto(): void {
+    if (!this.produtoPendingDelete) return;
+
+    const produto = this.produtoPendingDelete;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.closeConfirmDialog();
+
+    this.produtoService.deleteProduto(produto.id).subscribe({
+      next: (response) => {
+        this.successMessage = response.message || 'Produto excluído com sucesso.';
+
+        if (this.editingProdutoId === produto.id) {
+          this.cancelEdit();
+        }
+
+        this.loadProdutos();
+      },
+      error: (error) => {
+        if (error.status === 403) {
+          this.errorMessage =
+            'Seu perfil não tem permissão para excluir produtos.';
+          return;
+        }
+
+        if (error.status === 409) {
+          this.errorMessage =
+            error.error?.message ||
+            'Não é possível excluir este produto porque ele possui lotes vinculados.';
+          return;
+        }
+
+        this.errorMessage = 'Erro ao excluir produto.';
+      },
+    });
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.statusFilter.set('todos');
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }

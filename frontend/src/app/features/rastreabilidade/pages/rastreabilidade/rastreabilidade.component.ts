@@ -1,7 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RastreabilidadeService } from '../../services/rastreabilidade.service';
+import { LoteService } from '../../../lotes/services/lote.service';
+import { Lote } from '../../../lotes/models/lote.model';
 import {
   RastreabilidadeInsumoResponse,
   RastreabilidadeLoteResponse,
@@ -48,14 +50,26 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
             <span class="card-chip">Lote</span>
           </div>
 
+          <div class="form-group">
+            <label for="loteSelector">Selecionar lote cadastrado</label>
+            <select id="loteSelector" (change)="onSelectLote($event)">
+              <option value="">Escolha um lote da lista</option>
+              @for (lote of lotes; track lote.id) {
+                <option [value]="lote.id">
+                  {{ lote.numero_lote }} - {{ lote.produto.nome }} - {{ formatStatus(lote.status) }}
+                </option>
+              }
+            </select>
+          </div>
+
           <form [formGroup]="loteForm" (ngSubmit)="searchByLote()">
             <div class="form-group">
-              <label for="loteId">ID do lote</label>
+              <label for="loteId">ID ou número do lote</label>
               <input
                 id="loteId"
                 type="text"
                 formControlName="loteId"
-                placeholder="Cole o ID do lote"
+                placeholder="Ex.: LOT-2026-00001 ou ID do lote"
               />
             </div>
 
@@ -72,6 +86,18 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <p>Informe o código ou lote do insumo para localizar impactos.</p>
             </div>
             <span class="card-chip">Insumo</span>
+          </div>
+
+          <div class="form-group">
+            <label for="insumoSelector">Selecionar insumo já usado</label>
+            <select id="insumoSelector" (change)="onSelectInsumo($event)">
+              <option value="">Escolha um insumo da lista</option>
+              @for (insumo of insumosSugeridos; track insumo.label) {
+                <option [value]="insumo.valor">
+                  {{ insumo.label }}
+                </option>
+              }
+            </select>
           </div>
 
           <form [formGroup]="insumoForm" (ngSubmit)="searchByInsumo()">
@@ -454,7 +480,8 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         color: #334155;
       }
 
-      input {
+      input,
+      select {
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 12px;
@@ -464,7 +491,8 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
-      input:focus {
+      input:focus,
+      select:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
       }
@@ -655,9 +683,13 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
     `,
   ],
 })
-export class RastreabilidadeComponent {
+export class RastreabilidadeComponent implements OnInit {
   private fb = inject(FormBuilder);
   private rastreabilidadeService = inject(RastreabilidadeService);
+  private loteService = inject(LoteService);
+
+  lotes: Lote[] = [];
+  insumosSugeridos: { label: string; valor: string }[] = [];
 
   loadingLote = false;
   loadingInsumo = false;
@@ -674,6 +706,69 @@ export class RastreabilidadeComponent {
   insumoForm = this.fb.group({
     valor: ['', [Validators.required]],
   });
+
+  ngOnInit(): void {
+    this.loadLotes();
+  }
+
+  loadLotes(): void {
+    this.loteService.getLotes().subscribe({
+      next: (response) => {
+        this.lotes = response.data;
+        this.insumosSugeridos = this.buildInsumosSugeridos(response.data);
+      },
+      error: () => {
+        this.lotes = [];
+        this.insumosSugeridos = [];
+      },
+    });
+  }
+
+  onSelectLote(event: Event): void {
+    const loteId = (event.target as HTMLSelectElement).value;
+
+    if (!loteId) {
+      this.loteForm.patchValue({ loteId: '' });
+      return;
+    }
+
+    this.loteForm.patchValue({ loteId });
+    this.searchByLote();
+  }
+
+  onSelectInsumo(event: Event): void {
+    const valor = (event.target as HTMLSelectElement).value;
+
+    if (!valor) {
+      this.insumoForm.patchValue({ valor: '' });
+      return;
+    }
+
+    this.insumoForm.patchValue({ valor });
+    this.searchByInsumo();
+  }
+
+  private buildInsumosSugeridos(lotes: Lote[]): { label: string; valor: string }[] {
+    const map = new Map<string, { label: string; valor: string }>();
+
+    for (const lote of lotes) {
+      for (const insumo of lote.insumos ?? []) {
+        const valor = insumo.lote_insumo || insumo.codigo_insumo;
+        if (!valor) continue;
+
+        const key = `${insumo.codigo_insumo}-${insumo.lote_insumo}`;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            valor,
+            label: `${insumo.nome_insumo} | Código: ${insumo.codigo_insumo} | Lote: ${insumo.lote_insumo}`,
+          });
+        }
+      }
+    }
+
+    return Array.from(map.values());
+  }
 
   searchByLote(): void {
     if (this.loteForm.invalid) {
@@ -729,6 +824,18 @@ export class RastreabilidadeComponent {
           'Não foi possível encontrar a rastreabilidade do insumo informado.';
       },
     });
+  }
+
+  formatStatus(status: string): string {
+    const labels: Record<string, string> = {
+      em_producao: 'Em produção',
+      aguardando_inspecao: 'Aguardando inspeção',
+      aprovado: 'Aprovado',
+      aprovado_restricao: 'Aprovado com restrição',
+      reprovado: 'Reprovado',
+    };
+
+    return labels[status] ?? status;
   }
 
   formatTurno(turno: string): string {

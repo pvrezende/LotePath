@@ -4,19 +4,22 @@ import { Lote } from "../entities/Lote.js";
 import { Usuario } from "../entities/Usuario.js";
 import { CreateInspecaoDTO } from "../dtos/InspecaoDTO.js";
 import { AppError } from "../errors/AppError.js";
+import { AuditService } from "./AuditService.js";
 
 export class InspecaoService {
     private inspecaoRepo: Repository<InspecaoLote>;
     private loteRepo: Repository<Lote>;
     private usuarioRepo: Repository<Usuario>;
+    private auditService: AuditService;
 
     constructor(appDataSource: DataSource) {
         this.inspecaoRepo = appDataSource.getRepository(InspecaoLote);
         this.loteRepo = appDataSource.getRepository(Lote);
         this.usuarioRepo = appDataSource.getRepository(Usuario);
+        this.auditService = new AuditService(appDataSource);
     }
 
-    async create(loteId: string, data: CreateInspecaoDTO) {
+    async create(loteId: string, data: CreateInspecaoDTO, usuarioId?: string) {
         const lote = await this.loteRepo.findOne({
             where: { id: loteId },
             relations: {
@@ -55,6 +58,21 @@ export class InspecaoService {
 
         await this.loteRepo.save(lote);
 
+        await this.auditService.createLog({
+            modulo: "inspecao",
+            acao: "INSPECAO_REGISTRADA",
+            descricao: `Inspeção registrada no lote ${lote.numero_lote}`,
+            usuarioId: usuarioId ?? inspetor.id,
+            detalhes: {
+                loteId: lote.id,
+                numero_lote: lote.numero_lote,
+                inspecaoId: inspecaoSalva.id,
+                resultado: inspecaoSalva.resultado,
+                quantidade_repr: inspecaoSalva.quantidade_repr,
+                descricao_desvio: inspecaoSalva.descricao_desvio
+            }
+        });
+
         const loteAtualizado = await this.loteRepo.findOne({
             where: { id: lote.id },
             relations: {
@@ -70,7 +88,7 @@ export class InspecaoService {
         return loteAtualizado;
     }
 
-    async delete(loteId: string) {
+    async delete(loteId: string, usuarioId?: string) {
         const lote = await this.loteRepo.findOne({
             where: { id: loteId },
             relations: {
@@ -89,6 +107,13 @@ export class InspecaoService {
             throw new AppError("Este lote não possui inspeção registrada", 404);
         }
 
+        const inspecaoRemovida = {
+            id: lote.inspecao.id,
+            resultado: lote.inspecao.resultado,
+            quantidade_repr: lote.inspecao.quantidade_repr,
+            descricao_desvio: lote.inspecao.descricao_desvio
+        };
+
         await this.inspecaoRepo.remove(lote.inspecao);
 
         lote.quantidade_repr = 0;
@@ -97,6 +122,18 @@ export class InspecaoService {
         lote.inspecao = null as any;
 
         await this.loteRepo.save(lote);
+
+        await this.auditService.createLog({
+            modulo: "inspecao",
+            acao: "INSPECAO_EXCLUIDA",
+            descricao: `Inspeção excluída do lote ${lote.numero_lote}`,
+            usuarioId,
+            detalhes: {
+                loteId: lote.id,
+                numero_lote: lote.numero_lote,
+                inspecao: inspecaoRemovida
+            }
+        });
 
         const loteAtualizado = await this.loteRepo.findOne({
             where: { id: lote.id },

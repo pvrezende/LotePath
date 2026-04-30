@@ -31,4 +31,9 @@ export class LoteService {
   deleteLote(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/lotes/${id}`);
   }
+  downloadLotePdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/lotes/${id}/pdf`, {
+      responseType: 'blob',
+    });
+  }
 }

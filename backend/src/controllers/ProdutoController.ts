@@ -36,7 +36,7 @@ export class ProdutoController {
     async create(req: Request, res: Response, next: NextFunction) {
         try {
             const data = req.body as CreateProdutoDTO;
-            const produto = await this.produtoService.create(data);
+            const produto = await this.produtoService.create(data, req.user?.id);
 
             return res.status(201).json({ produto });
         } catch (error) {
@@ -48,7 +48,7 @@ export class ProdutoController {
         try {
             const id = req.params.id as string;
             const data = req.body as UpdateProdutoDTO;
-            const produto = await this.produtoService.update(id, data);
+            const produto = await this.produtoService.update(id, data, req.user?.id);
 
             return res.status(200).json({ produto });
         } catch (error) {
@@ -59,9 +59,12 @@ export class ProdutoController {
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-            await this.produtoService.delete(id);
 
-            return res.status(204).send();
+            await this.produtoService.delete(id, req.user?.id);
+
+            return res.status(200).json({
+                message: "Produto excluído com sucesso"
+            });
         } catch (error) {
             return next(error);
         }

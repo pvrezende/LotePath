@@ -135,7 +135,7 @@ import { FormsModule } from '@angular/forms';
               <span class="stat-icon">✅</span>
             </div>
             <strong class="stat-value">{{ indicadores.taxaAprovacaoMes }}%</strong>
-            <small class="stat-caption">Com base no mês de referência</small>
+            <small class="stat-caption">Com base no período filtrado</small>
           </article>
 
           <article class="stat-panel">

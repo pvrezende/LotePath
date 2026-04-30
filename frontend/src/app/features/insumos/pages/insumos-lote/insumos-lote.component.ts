@@ -6,6 +6,7 @@ import { Lote } from '../../../lotes/models/lote.model';
 import { InsumoLoteService } from '../../services/insumo-lote.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-insumos-lote',
@@ -15,6 +16,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <section class="insumos-page">
@@ -72,67 +74,73 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               <p><b>Turno:</b> {{ formatTurno(selectedLote.turno) }}</p>
             </div>
 
-            <form [formGroup]="insumoForm" (ngSubmit)="onSubmit()">
-              <div class="form-group">
-                <label for="nome_insumo">Nome do insumo</label>
-                <input
-                  id="nome_insumo"
-                  type="text"
-                  formControlName="nome_insumo"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="codigo_insumo">Código do insumo</label>
-                <input
-                  id="codigo_insumo"
-                  type="text"
-                  formControlName="codigo_insumo"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="lote_insumo">Lote do insumo</label>
-                <input
-                  id="lote_insumo"
-                  type="text"
-                  formControlName="lote_insumo"
-                />
-              </div>
-
-              <div class="form-row">
+            @if (selectedLote.status === 'em_producao') {
+              <form [formGroup]="insumoForm" (ngSubmit)="onSubmit()">
                 <div class="form-group">
-                  <label for="quantidade">Quantidade</label>
+                  <label for="nome_insumo">Nome do insumo</label>
                   <input
-                    id="quantidade"
-                    type="number"
-                    formControlName="quantidade"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="unidade">Unidade</label>
-                  <input
-                    id="unidade"
+                    id="nome_insumo"
                     type="text"
-                    formControlName="unidade"
-                    placeholder="kg, un, mL..."
+                    formControlName="nome_insumo"
                   />
                 </div>
+
+                <div class="form-group">
+                  <label for="codigo_insumo">Código do insumo</label>
+                  <input
+                    id="codigo_insumo"
+                    type="text"
+                    formControlName="codigo_insumo"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="lote_insumo">Lote do insumo</label>
+                  <input
+                    id="lote_insumo"
+                    type="text"
+                    formControlName="lote_insumo"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="quantidade">Quantidade</label>
+                    <input
+                      id="quantidade"
+                      type="number"
+                      formControlName="quantidade"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="unidade">Unidade</label>
+                    <input
+                      id="unidade"
+                      type="text"
+                      formControlName="unidade"
+                      placeholder="kg, un, mL..."
+                    />
+                  </div>
+                </div>
+
+                @if (errorMessage) {
+                  <div class="alert error">{{ errorMessage }}</div>
+                }
+
+                @if (successMessage) {
+                  <div class="alert success">{{ successMessage }}</div>
+                }
+
+                <button type="submit" class="primary-btn" [disabled]="saving">
+                  {{ saving ? 'Salvando...' : 'Adicionar insumo' }}
+                </button>
+              </form>
+            } @else {
+              <div class="alert warning">
+                Este lote não está em produção. Por isso, não é possível adicionar ou remover insumos.
               </div>
-
-              @if (errorMessage) {
-                <div class="alert error">{{ errorMessage }}</div>
-              }
-
-              @if (successMessage) {
-                <div class="alert success">{{ successMessage }}</div>
-              }
-
-              <button type="submit" class="primary-btn" [disabled]="saving">
-                {{ saving ? 'Salvando...' : 'Adicionar insumo' }}
-              </button>
-            </form>
+            }
           } @else {
             <app-empty-state
               title="Nenhum lote selecionado"
@@ -161,30 +169,6 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
               description="Escolha um lote na lateral para visualizar os insumos vinculados."
             />
           } @else if (selectedLote.insumos && selectedLote.insumos.length > 0) {
-            <div class="mobile-insumo-list">
-              @for (insumo of selectedLote.insumos; track insumo.id) {
-                <article class="mobile-insumo-card">
-                  <div class="mobile-insumo-head">
-                    <strong>{{ insumo.nome_insumo }}</strong>
-                    <button
-                      type="button"
-                      class="remove-btn"
-                      (click)="removeInsumo(insumo.id)"
-                    >
-                      Remover
-                    </button>
-                  </div>
-
-                  <div class="mobile-insumo-body">
-                    <span><b>Código:</b> {{ insumo.codigo_insumo }}</span>
-                    <span><b>Lote:</b> {{ insumo.lote_insumo }}</span>
-                    <span><b>Quantidade:</b> {{ insumo.quantidade }}</span>
-                    <span><b>Unidade:</b> {{ insumo.unidade }}</span>
-                  </div>
-                </article>
-              }
-            </div>
-
             <div class="table-wrapper desktop-table">
               <table>
                 <thead>
@@ -194,7 +178,9 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                     <th>Lote do insumo</th>
                     <th>Quantidade</th>
                     <th>Unidade</th>
-                    <th>Ações</th>
+                    @if (selectedLote.status === 'em_producao') {
+                      <th>Ações</th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
@@ -205,15 +191,17 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
                       <td>{{ insumo.lote_insumo }}</td>
                       <td>{{ insumo.quantidade }}</td>
                       <td>{{ insumo.unidade }}</td>
-                      <td>
-                        <button
-                          type="button"
-                          class="remove-btn"
-                          (click)="removeInsumo(insumo.id)"
-                        >
-                          Remover
-                        </button>
-                      </td>
+                      @if (selectedLote.status === 'em_producao') {
+                        <td>
+                          <button
+                            type="button"
+                            class="remove-btn"
+                            (click)="removeInsumo(insumo.id)"
+                          >
+                            Remover
+                          </button>
+                        </td>
+                      }
                     </tr>
                   }
                 </tbody>
@@ -227,6 +215,18 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
           }
         </section>
       </div>
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Remover insumo"
+        [message]="confirmDialogMessage"
+        eyebrow="Confirmação"
+        confirmText="Remover insumo"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmRemoveInsumo()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -381,7 +381,6 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         padding: 12px 14px;
         outline: none;
         background: #fff;
-        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus,
@@ -425,6 +424,12 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         border: 1px solid #bbf7d0;
       }
 
+      .alert.warning {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+      }
+
       .primary-btn,
       .secondary-btn,
       .remove-btn {
@@ -462,50 +467,9 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         font-size: 13px;
       }
 
-      .primary-btn:hover,
-      .secondary-btn:hover,
-      .remove-btn:hover {
-        transform: translateY(-1px);
-      }
-
       .table-wrapper {
         overflow-x: auto;
         border-radius: 18px;
-      }
-
-      .desktop-table {
-        display: block;
-      }
-
-      .mobile-insumo-list {
-        display: none;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .mobile-insumo-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 18px;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .mobile-insumo-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .mobile-insumo-body {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        color: #334155;
-        font-size: 14px;
       }
 
       table {
@@ -530,10 +494,6 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 
       td {
         color: #0f172a;
-      }
-
-      tbody tr:hover {
-        background: #f8fafc;
       }
 
       .strong {
@@ -564,30 +524,9 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
         }
 
         .card-header,
-        .selected-lote-top {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
+        .selected-lote-top,
         .form-row {
           grid-template-columns: 1fr;
-        }
-
-        .desktop-table {
-          display: none;
-        }
-
-        .mobile-insumo-list {
-          display: flex;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .hero-copy h2 {
-          font-size: 26px;
-        }
-
-        .mobile-insumo-head {
           flex-direction: column;
           align-items: flex-start;
         }
@@ -603,8 +542,10 @@ export class InsumosLoteComponent implements OnInit {
   lotes: Lote[] = [];
   selectedLoteId = '';
   selectedLote: Lote | null = null;
+  insumoPendingDeleteId = '';
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
-  loading = false;
   saving = false;
   errorMessage = '';
   successMessage = '';
@@ -635,7 +576,6 @@ export class InsumosLoteComponent implements OnInit {
   onSelectLote(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedLoteId = value;
-
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -652,8 +592,8 @@ export class InsumosLoteComponent implements OnInit {
 
     this.loteService.getLotes().subscribe({
       next: (response) => {
-        const lote = response.data.find((item) => item.id === this.selectedLoteId) ?? null;
-        this.selectedLote = lote;
+        this.selectedLote =
+          response.data.find((item) => item.id === this.selectedLoteId) ?? null;
       },
       error: () => {
         this.errorMessage = 'Não foi possível atualizar o lote selecionado.';
@@ -706,14 +646,12 @@ export class InsumosLoteComponent implements OnInit {
         this.saving = false;
 
         if (error.status === 403) {
-          this.errorMessage =
-            'Seu perfil não tem permissão para adicionar insumos.';
+          this.errorMessage = 'Seu perfil não tem permissão para adicionar insumos.';
           return;
         }
 
         if (error.status === 400) {
-          this.errorMessage =
-            'Dados inválidos para cadastrar o insumo. Verifique os campos.';
+          this.errorMessage = 'Dados inválidos ou lote fora de produção.';
           return;
         }
 
@@ -725,25 +663,38 @@ export class InsumosLoteComponent implements OnInit {
   removeInsumo(insumoId: string): void {
     if (!this.selectedLoteId) return;
 
-    const confirmed = window.confirm(
-      'Tem certeza que deseja remover este insumo do lote?'
-    );
+    this.insumoPendingDeleteId = insumoId;
+    this.confirmDialogMessage =
+      'Tem certeza que deseja remover este insumo do lote? Essa movimentação ficará registrada na auditoria.';
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmed) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.insumoPendingDeleteId = '';
+    this.confirmDialogMessage = '';
+  }
+
+  confirmRemoveInsumo(): void {
+    if (!this.selectedLoteId || !this.insumoPendingDeleteId) return;
+
+    const insumoId = this.insumoPendingDeleteId;
 
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.insumoLoteService
-  .removeInsumoFromLote(this.selectedLoteId, insumoId)
-  .subscribe({
-      next: () => {
-        this.successMessage = 'Insumo removido com sucesso.';
-        this.refreshSelectedLote();
-      },
-      error: () => {
-        this.errorMessage = 'Erro ao remover o insumo do lote.';
-      },
-    });
+      .removeInsumoFromLote(this.selectedLoteId, insumoId)
+      .subscribe({
+        next: () => {
+          this.successMessage = 'Insumo removido com sucesso.';
+          this.refreshSelectedLote();
+        },
+        error: () => {
+          this.errorMessage = 'Erro ao remover o insumo do lote.';
+        },
+      });
   }
 }
+

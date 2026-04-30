@@ -7,6 +7,8 @@ import { InspecaoService } from '../../services/inspecao.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PermissionService } from '../../../../core/services/permission.service';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-inspecao-lote',
@@ -16,6 +18,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <section class="inspecao-page">
@@ -82,7 +85,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                     <small>O lote já possui resultado salvo no sistema.</small>
                   </div>
 
-                  @if (isGestor) {
+                  @if (canDeleteInspecao) {
                     <button
                       type="button"
                       class="delete-btn"
@@ -102,7 +105,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                 </p>
                 <p><b>Inspecionado em:</b> {{ formatDateTime(selectedLote.inspecao.inspecionado_em) }}</p>
               </div>
-            } @else {
+            } @else if (canInspectLotes) {
               <form [formGroup]="inspecaoForm" (ngSubmit)="onSubmit()">
                 <div class="form-group">
                   <label for="resultado">Resultado</label>
@@ -145,6 +148,10 @@ import { AuthService } from '../../../../core/services/auth.service';
                   {{ saving ? 'Salvando...' : 'Registrar inspeção' }}
                 </button>
               </form>
+            } @else {
+              <div class="alert warning">
+                Seu perfil não possui permissão para registrar inspeções.
+              </div>
             }
           } @else {
             <app-empty-state
@@ -208,6 +215,18 @@ import { AuthService } from '../../../../core/services/auth.service';
           }
         </section>
       </div>
+
+      <app-confirm-dialog
+        [open]="confirmDialogOpen"
+        title="Excluir inspeção"
+        [message]="confirmDialogMessage"
+        eyebrow="Ação restrita ao gestor"
+        confirmText="Excluir inspeção"
+        cancelText="Cancelar"
+        variant="danger"
+        (confirm)="confirmDeleteInspecao()"
+        (cancel)="closeConfirmDialog()"
+      />
     </section>
   `,
   styles: [
@@ -357,7 +376,6 @@ import { AuthService } from '../../../../core/services/auth.service';
         padding: 12px 14px;
         outline: none;
         background: #fff;
-        transition: border-color 0.18s ease, box-shadow 0.18s ease;
       }
 
       input:focus,
@@ -395,15 +413,6 @@ import { AuthService } from '../../../../core/services/auth.service';
         color: #0f172a;
       }
 
-      .already-inspected-box small {
-        color: #64748b;
-      }
-
-      .already-inspected-box p {
-        margin-bottom: 8px;
-        color: #334155;
-      }
-
       .alert {
         border-radius: 12px;
         padding: 12px 14px;
@@ -421,6 +430,12 @@ import { AuthService } from '../../../../core/services/auth.service';
         background: #ecfdf5;
         color: #166534;
         border: 1px solid #bbf7d0;
+      }
+
+      .alert.warning {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
       }
 
       .primary-btn,
@@ -457,12 +472,6 @@ import { AuthService } from '../../../../core/services/auth.service';
         background: #fee2e2;
         color: #b91c1c;
         border: 1px solid #fecaca;
-      }
-
-      .primary-btn:hover,
-      .secondary-btn:hover,
-      .delete-btn:hover {
-        transform: translateY(-1px);
       }
 
       .summary-grid {
@@ -521,12 +530,6 @@ import { AuthService } from '../../../../core/services/auth.service';
           align-items: flex-start;
         }
       }
-
-      @media (max-width: 480px) {
-        .hero-copy h2 {
-          font-size: 26px;
-        }
-      }
     `,
   ],
 })
@@ -535,10 +538,13 @@ export class InspecaoLoteComponent implements OnInit {
   private loteService = inject(LoteService);
   private inspecaoService = inject(InspecaoService);
   private authService = inject(AuthService);
+  private permissionService = inject(PermissionService);
 
   lotes: Lote[] = [];
   selectedLoteId = '';
   selectedLote: Lote | null = null;
+  confirmDialogOpen = false;
+  confirmDialogMessage = '';
 
   saving = false;
   deleting = false;
@@ -551,8 +557,12 @@ export class InspecaoLoteComponent implements OnInit {
     descricao_desvio: [''],
   });
 
-  get isGestor(): boolean {
-    return this.authService.getUser()?.perfil === 'gestor';
+  get canInspectLotes(): boolean {
+    return this.permissionService.hasPermission('canInspectLotes');
+  }
+
+  get canDeleteInspecao(): boolean {
+    return this.permissionService.hasPermission('canDeleteInspecao');
   }
 
   ngOnInit(): void {
@@ -573,7 +583,6 @@ export class InspecaoLoteComponent implements OnInit {
   onSelectLote(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedLoteId = value;
-
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -590,8 +599,8 @@ export class InspecaoLoteComponent implements OnInit {
 
     this.loteService.getLotes().subscribe({
       next: (response) => {
-        const lote = response.data.find((item) => item.id === this.selectedLoteId) ?? null;
-        this.selectedLote = lote;
+        this.selectedLote =
+          response.data.find((item) => item.id === this.selectedLoteId) ?? null;
       },
       error: () => {
         this.errorMessage = 'Não foi possível atualizar o lote selecionado.';
@@ -609,9 +618,7 @@ export class InspecaoLoteComponent implements OnInit {
     return labels[turno] ?? turno;
   }
 
-  formatResultado(
-    resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado'
-  ): string {
+  formatResultado(resultado: 'aprovado' | 'aprovado_restricao' | 'reprovado'): string {
     const labels = {
       aprovado: 'Aprovado',
       aprovado_restricao: 'Aprovado com restrição',
@@ -662,8 +669,7 @@ export class InspecaoLoteComponent implements OnInit {
         this.saving = false;
 
         if (error.status === 403) {
-          this.errorMessage =
-            'Seu perfil não tem permissão para registrar inspeção.';
+          this.errorMessage = 'Seu perfil não tem permissão para registrar inspeção.';
           return;
         }
 
@@ -673,8 +679,7 @@ export class InspecaoLoteComponent implements OnInit {
         }
 
         if (error.status === 400) {
-          this.errorMessage =
-            'Dados inválidos para registrar a inspeção. Verifique os campos preenchidos.';
+          this.errorMessage = 'Dados inválidos para registrar a inspeção.';
           return;
         }
 
@@ -684,17 +689,25 @@ export class InspecaoLoteComponent implements OnInit {
   }
 
   onDeleteInspecao(): void {
-    if (!this.selectedLoteId || !this.isGestor) return;
+    if (!this.selectedLoteId || !this.canDeleteInspecao) return;
 
-    const confirmDelete = window.confirm(
-      'Tem certeza que deseja excluir esta inspeção?'
-    );
+    this.confirmDialogMessage =
+      'Tem certeza que deseja excluir esta inspeção? O lote voltará para aguardando inspeção e a ação será registrada na auditoria.';
+    this.confirmDialogOpen = true;
+  }
 
-    if (!confirmDelete) return;
+  closeConfirmDialog(): void {
+    this.confirmDialogOpen = false;
+    this.confirmDialogMessage = '';
+  }
+
+  confirmDeleteInspecao(): void {
+    if (!this.selectedLoteId || !this.canDeleteInspecao) return;
 
     this.deleting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.closeConfirmDialog();
 
     this.inspecaoService.deleteInspecao(this.selectedLoteId).subscribe({
       next: (response) => {
@@ -706,8 +719,7 @@ export class InspecaoLoteComponent implements OnInit {
         this.deleting = false;
 
         if (error.status === 403) {
-          this.errorMessage =
-            'Seu perfil não tem permissão para excluir inspeção.';
+          this.errorMessage = 'Seu perfil não tem permissão para excluir inspeção.';
           return;
         }
 
@@ -721,3 +733,4 @@ export class InspecaoLoteComponent implements OnInit {
     });
   }
 }
+

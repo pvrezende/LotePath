@@ -15,11 +15,15 @@ export class AuthService {
     async login(data: LoginDTO) {
         const usuario = await this.usuarioRepo.findOne({
             where: { email: data.email },
-            select: ["id", "nome", "email", "senha", "perfil"]
+            select: ["id", "nome", "email", "senha", "perfil", "ativo"]
         });
 
         if (!usuario) {
             throw new AppError("Email ou senha inválidos", 401);
+        }
+
+        if (!usuario.ativo) {
+            throw new AppError("Usuário inativo. Procure um gestor para reativar o acesso.", 403);
         }
 
         const senhaCorreta = await bcrypt.compare(data.senha, usuario.senha);
@@ -51,7 +55,8 @@ export class AuthService {
                 id: usuario.id,
                 nome: usuario.nome,
                 email: usuario.email,
-                perfil: usuario.perfil
+                perfil: usuario.perfil,
+                ativo: usuario.ativo
             },
             token
         };
