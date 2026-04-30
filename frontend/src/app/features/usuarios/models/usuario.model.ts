@@ -5,6 +5,7 @@ export interface Usuario {
   nome: string;
   email: string;
   perfil: UsuarioPerfil;
+  ativo: boolean;
   criado_em: string;
 }
 
@@ -13,6 +14,7 @@ export interface CreateUsuarioRequest {
   email: string;
   senha: string;
   perfil: UsuarioPerfil;
+  ativo?: boolean;
 }
 
 export interface UpdateUsuarioRequest {
@@ -20,4 +22,5 @@ export interface UpdateUsuarioRequest {
   email?: string;
   senha?: string;
   perfil?: UsuarioPerfil;
+  ativo?: boolean;
 }

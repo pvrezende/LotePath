@@ -8,6 +8,7 @@ export interface AuthUser {
   nome: string;
   email: string;
   perfil: 'operador' | 'inspetor' | 'gestor';
+  ativo: boolean;
 }
 
 export interface LoginResponse {

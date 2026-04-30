@@ -20,6 +20,9 @@ export class Usuario {
     @Column({ type: "enum", enum: Perfil })
     perfil!: Perfil;
 
+    @Column({ type: "boolean", default: true })
+    ativo!: boolean;
+
     @CreateDateColumn({ type: "timestamp" })
     criado_em!: Date;
 

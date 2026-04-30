@@ -17,13 +17,19 @@ export class UsuarioService {
         this.inspecaoRepo = appDataSource.getRepository(InspecaoLote);
     }
 
-    async getAll() {
-        const usuarios = await this.usuarioRepo.find({ order: { criado_em: "ASC" } });
+    private removeSenha(usuario: Usuario) {
+        const { senha, ...usuarioSemSenha } = usuario as any;
+        return usuarioSemSenha;
+    }
 
-        return usuarios.map((usuario) => {
-            const { senha, ...usuarioSemSenha } = usuario as any;
-            return usuarioSemSenha;
+    async getAll() {
+        const usuarios = await this.usuarioRepo.find({
+            order: {
+                criado_em: "ASC"
+            }
         });
+
+        return usuarios.map((usuario) => this.removeSenha(usuario));
     }
 
     async getById(id: string) {
@@ -33,13 +39,13 @@ export class UsuarioService {
             throw new AppError("Usuário não encontrado", 404);
         }
 
-        const { senha, ...usuarioSemSenha } = usuario as any;
-
-        return usuarioSemSenha;
+        return this.removeSenha(usuario);
     }
 
     async createUser(data: CreateUserDTO) {
-        const emailExists = await this.usuarioRepo.findOneBy({ email: data.email });
+        const emailExists = await this.usuarioRepo.findOneBy({
+            email: data.email
+        });
 
         if (emailExists) {
             throw new AppError("Já existe um usuário com este e-mail", 409);
@@ -51,13 +57,13 @@ export class UsuarioService {
             nome: data.nome,
             email: data.email,
             senha: senhaHash,
-            perfil: data.perfil
+            perfil: data.perfil,
+            ativo: data.ativo ?? true
         });
 
         const usuarioSalvo = await this.usuarioRepo.save(usuario);
-        const { senha, ...usuarioSemSenha } = usuarioSalvo as any;
 
-        return usuarioSemSenha;
+        return this.removeSenha(usuarioSalvo);
     }
 
     async updateUser(id: string, data: UpdateUserDTO) {
@@ -68,7 +74,9 @@ export class UsuarioService {
         }
 
         if (data.email && data.email !== usuario.email) {
-            const emailExists = await this.usuarioRepo.findOneBy({ email: data.email });
+            const emailExists = await this.usuarioRepo.findOneBy({
+                email: data.email
+            });
 
             if (emailExists) {
                 throw new AppError("Já existe um usuário com este e-mail", 409);
@@ -85,14 +93,17 @@ export class UsuarioService {
             usuario.perfil = data.perfil;
         }
 
+        if (typeof data.ativo === "boolean") {
+            usuario.ativo = data.ativo;
+        }
+
         if (data.senha) {
             usuario.senha = await bcrypt.hash(data.senha, 8);
         }
 
         const usuarioAtualizado = await this.usuarioRepo.save(usuario);
-        const { senha, ...usuarioSemSenha } = usuarioAtualizado as any;
 
-        return usuarioSemSenha;
+        return this.removeSenha(usuarioAtualizado);
     }
 
     async deleteUser(id: string) {
@@ -103,22 +114,32 @@ export class UsuarioService {
         }
 
         const lotesVinculados = await this.loteRepo.count({
-            where: { operador: { id } }
+            where: {
+                operador: {
+                    id
+                }
+            }
         });
 
         const inspecoesVinculadas = await this.inspecaoRepo.count({
-            where: { inspetor: { id } }
+            where: {
+                inspetor: {
+                    id
+                }
+            }
         });
 
         if (lotesVinculados > 0 || inspecoesVinculadas > 0) {
             throw new AppError(
-                "Não é possível excluir este usuário porque ele possui histórico vinculado a lotes ou inspeções. Use a opção de desativar usuário quando ela estiver disponível.",
+                "Não é possível excluir este usuário porque ele possui histórico vinculado a lotes ou inspeções. Use a opção de desativar usuário.",
                 409
             );
         }
 
         await this.usuarioRepo.remove(usuario);
 
-        return { message: "Usuário excluído com sucesso" };
+        return {
+            message: "Usuário excluído com sucesso"
+        };
     }
 }

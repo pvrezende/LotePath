@@ -4,12 +4,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { Usuario, UsuarioPerfil } from '../../models/usuario.model';
 import { UsuarioService } from '../../services/usuario.service';
-import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent, ConfirmDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, EmptyStateComponent],
   template: `
     <section class="usuarios-page">
       <div class="hero-card">
@@ -76,6 +75,11 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
               </select>
             </div>
 
+            <label class="checkbox-row">
+              <input type="checkbox" formControlName="ativo" />
+              Usuário ativo
+            </label>
+
             @if (errorMessage) {
               <div class="alert error">{{ errorMessage }}</div>
             }
@@ -129,6 +133,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                     <th>Nome</th>
                     <th>E-mail</th>
                     <th>Perfil</th>
+                    <th>Status</th>
                     <th>Criado em</th>
                     <th>Ações</th>
                   </tr>
@@ -144,6 +149,15 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                           {{ formatPerfil(usuario.perfil) }}
                         </span>
                       </td>
+                      <td>
+                        <span
+                          class="status-chip"
+                          [class.ativo]="usuario.ativo"
+                          [class.inativo]="!usuario.ativo"
+                        >
+                          {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
+                        </span>
+                      </td>
                       <td>{{ formatDateTime(usuario.criado_em) }}</td>
                       <td>
                         <div class="table-actions">
@@ -153,6 +167,16 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                             (click)="startEdit(usuario)"
                           >
                             Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="status-btn"
+                            [class.activate]="!usuario.ativo"
+                            [class.deactivate]="usuario.ativo"
+                            (click)="toggleUsuarioStatus(usuario)"
+                          >
+                            {{ usuario.ativo ? 'Desativar' : 'Ativar' }}
                           </button>
 
                           <button
@@ -177,17 +201,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           }
         </section>
       </div>
-      <app-confirm-dialog
-        [open]="confirmDialogOpen"
-        title="Excluir usuário"
-        [message]="confirmDialogMessage"
-        eyebrow="Ação irreversível"
-        confirmText="Excluir usuário"
-        cancelText="Cancelar"
-        variant="danger"
-        (confirm)="confirmDeleteUsuario()"
-        (cancel)="closeConfirmDialog()"
-      />
     </section>
   `,
   styles: [
@@ -380,7 +393,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .primary-btn,
       .secondary-btn,
       .edit-btn,
-      .delete-btn {
+      .delete-btn,
+      .status-btn {
         height: 40px;
         padding: 0 14px;
         border-radius: 12px;
@@ -411,6 +425,50 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .delete-btn {
         background: #fee2e2;
         color: #b91c1c;
+      }
+
+      .status-btn.deactivate {
+        background: #ffedd5;
+        color: #c2410c;
+      }
+
+      .status-btn.activate {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .status-chip.ativo {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .status-chip.inativo {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0 16px;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      .checkbox-row input {
+        width: auto;
       }
 
       .form-actions,
@@ -524,9 +582,6 @@ export class UsuariosComponent implements OnInit {
 
   usuarios: Usuario[] = [];
   editingUserId: string | null = null;
-  userPendingDelete: Usuario | null = null;
-  confirmDialogOpen = false;
-  confirmDialogMessage = '';
 
   loading = true;
   saving = false;
@@ -538,6 +593,7 @@ export class UsuariosComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     senha: ['', [Validators.minLength(6)]],
     perfil: ['' as UsuarioPerfil | '', [Validators.required]],
+    ativo: [true],
   });
 
   ngOnInit(): void {
@@ -585,6 +641,7 @@ export class UsuariosComponent implements OnInit {
       nome: this.usuarioForm.value.nome ?? '',
       email: this.usuarioForm.value.email ?? '',
       perfil: this.usuarioForm.value.perfil as UsuarioPerfil,
+      ativo: this.usuarioForm.value.ativo ?? true,
       senha: this.usuarioForm.value.senha?.trim() || undefined,
     };
 
@@ -640,6 +697,7 @@ export class UsuariosComponent implements OnInit {
       email: usuario.email,
       senha: '',
       perfil: usuario.perfil,
+      ativo: usuario.ativo,
     });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -652,29 +710,40 @@ export class UsuariosComponent implements OnInit {
       email: '',
       senha: '',
       perfil: '',
+      ativo: true,
     });
   }
 
+  toggleUsuarioStatus(usuario: Usuario): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const novoStatus = !usuario.ativo;
+
+    this.usuarioService
+      .updateUsuario(usuario.id, { ativo: novoStatus })
+      .subscribe({
+        next: () => {
+          this.successMessage = novoStatus
+            ? 'Usuário ativado com sucesso.'
+            : 'Usuário desativado com sucesso.';
+          this.loadUsuarios();
+        },
+        error: () => {
+          this.errorMessage = 'Erro ao alterar status do usuário.';
+        },
+      });
+  }
+
   deleteUsuario(usuario: Usuario): void {
-    this.userPendingDelete = usuario;
-    this.confirmDialogMessage = `Tem certeza que deseja excluir o usuário ${usuario.nome}? Essa ação não poderá ser desfeita.`;
-    this.confirmDialogOpen = true;
-  }
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir o usuário ${usuario.nome}?`
+    );
 
-  closeConfirmDialog(): void {
-    this.confirmDialogOpen = false;
-    this.userPendingDelete = null;
-    this.confirmDialogMessage = '';
-  }
-
-  confirmDeleteUsuario(): void {
-    if (!this.userPendingDelete) return;
-
-    const usuario = this.userPendingDelete;
+    if (!confirmed) return;
 
     this.errorMessage = '';
     this.successMessage = '';
-    this.closeConfirmDialog();
 
     this.usuarioService.deleteUsuario(usuario.id).subscribe({
       next: (response) => {
