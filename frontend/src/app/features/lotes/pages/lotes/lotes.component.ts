@@ -850,19 +850,26 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
 
       .modal-backdrop {
         position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.45);
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 280px;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
-        z-index: 30;
+        z-index: 9999;
       }
 
       .modal-card {
-        width: 100%;
-        max-width: 900px;
-        max-height: 90vh;
+        position: relative;
+        z-index: 10000;
+        width: min(1120px, calc(100vw - 328px));
+        max-height: calc(100vh - 48px);
+        max-height: calc(100dvh - 48px);
         overflow-y: auto;
         background: #ffffff;
         border-radius: 24px;
@@ -978,6 +985,13 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
 
         .modal-backdrop {
           padding: 12px;
+          align-items: flex-start;
+        }
+
+        .modal-card {
+          width: calc(100vw - 24px);
+          max-height: calc(100dvh - 24px);
+          border-radius: 18px;
         }
 
         .modal-header h3 {
