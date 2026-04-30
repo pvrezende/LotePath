@@ -1,16 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProdutoService } from '../../services/produto.service';
 import { Produto } from '../../models/produto.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+
+type StatusFilter = 'todos' | 'ativos' | 'inativos';
 
 @Component({
   selector: 'app-produtos',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     EmptyStateComponent,
     ConfirmDialogComponent,
@@ -22,15 +25,15 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           <span class="eyebrow">CADASTRO</span>
           <h2>Catálogo de produtos</h2>
           <p>
-            Cadastre, edite e organize os produtos utilizados na abertura de
-            lotes, mantendo o portfólio sempre atualizado.
+            Cadastre, edite, exclua e filtre os produtos utilizados na abertura
+            de lotes, mantendo o portfólio sempre atualizado.
           </p>
         </div>
 
         <div class="hero-badge">
           <span class="hero-label">Produtos cadastrados</span>
-          <strong>{{ produtos.length }}</strong>
-          <small>itens disponíveis</small>
+          <strong>{{ produtosFiltrados().length }}</strong>
+          <small>de {{ produtos.length }} cadastrado(s)</small>
         </div>
       </div>
 
@@ -120,15 +123,47 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           <div class="card-header">
             <div>
               <h3>Produtos cadastrados</h3>
-              <p>Consulte, edite ou exclua produtos do catálogo.</p>
+              <p>Consulte, filtre, edite ou exclua produtos do catálogo.</p>
             </div>
 
             <div class="list-actions">
-              <span class="card-chip">{{ produtos.length }} produto(s)</span>
+              <span class="card-chip">{{ produtosFiltrados().length }} produto(s)</span>
               <button type="button" class="secondary-btn" (click)="loadProdutos()">
                 Atualizar
               </button>
             </div>
+          </div>
+
+
+
+          <div class="filters-card">
+            <div class="filter-group search-group">
+              <label for="searchTerm">Buscar produto</label>
+              <input
+                id="searchTerm"
+                type="text"
+                [ngModel]="searchTerm()"
+                (ngModelChange)="searchTerm.set($event)"
+                placeholder="Busque por código, nome ou linha"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="statusFilter">Status</label>
+              <select
+                id="statusFilter"
+                [ngModel]="statusFilter()"
+                (ngModelChange)="statusFilter.set($event)"
+              >
+                <option value="todos">Todos</option>
+                <option value="ativos">Ativos</option>
+                <option value="inativos">Inativos</option>
+              </select>
+            </div>
+
+            <button type="button" class="clear-btn" (click)="clearFilters()">
+              Limpar filtros
+            </button>
           </div>
 
           @if (loading) {
@@ -136,9 +171,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
               <div class="loading-line"></div>
               <p>Carregando produtos...</p>
             </div>
-          } @else if (produtos.length > 0) {
+          } @else if (produtosFiltrados().length > 0) {
             <div class="mobile-product-list">
-              @for (produto of produtos; track produto.id) {
+              @for (produto of produtosFiltrados(); track produto.id) {
                 <article class="mobile-product-card">
                   <div class="mobile-product-top">
                     <strong>{{ produto.codigo }}</strong>
@@ -190,7 +225,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   </tr>
                 </thead>
                 <tbody>
-                  @for (produto of produtos; track produto.id) {
+                  @for (produto of produtosFiltrados(); track produto.id) {
                     <tr>
                       <td class="strong">{{ produto.codigo }}</td>
                       <td>{{ produto.nome }}</td>
@@ -230,8 +265,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             </div>
           } @else {
             <app-empty-state
-              title="Nenhum produto cadastrado"
-              description="Cadastre o primeiro produto para começar a abrir lotes no sistema."
+              title="Nenhum produto encontrado"
+              description="Ajuste os filtros ou cadastre um novo produto."
             />
           }
         </section>
@@ -261,7 +296,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .hero-card,
       .form-card,
       .list-card,
-      .feedback-box {
+      .feedback-box,
+      .filters-card {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(226, 232, 240, 0.95);
         box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
@@ -386,6 +422,23 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         flex-wrap: wrap;
       }
 
+
+      .filters-card {
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 180px auto;
+        gap: 14px;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
       .form-group {
         margin-bottom: 14px;
       }
@@ -398,7 +451,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       }
 
       input,
-      textarea {
+      textarea,
+      select {
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 12px;
@@ -409,7 +463,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       }
 
       input:focus,
-      textarea:focus {
+      textarea:focus,
+      select:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
       }
@@ -452,7 +507,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .primary-btn,
       .secondary-btn,
       .edit-btn,
-      .delete-btn {
+      .delete-btn,
+      .clear-btn {
         height: 40px;
         padding: 0 14px;
         border-radius: 12px;
@@ -474,7 +530,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
       }
 
-      .secondary-btn {
+      .secondary-btn,
+      .clear-btn {
         background: #f1f5f9;
         color: #0f172a;
         border: 1px solid #e2e8f0;
@@ -485,7 +542,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         color: #b45309;
       }
 
-      .delete-btn {
+      .delete-btn,
+      .clear-btn {
         background: #fee2e2;
         color: #b91c1c;
       }
@@ -493,7 +551,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .primary-btn:hover,
       .secondary-btn:hover,
       .edit-btn:hover,
-      .delete-btn:hover {
+      .delete-btn:hover,
+      .clear-btn:hover {
         transform: translateY(-1px);
       }
 
@@ -628,6 +687,10 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         .content-grid {
           grid-template-columns: 1fr;
         }
+
+        .filters-card {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 768px) {
@@ -673,6 +736,29 @@ export class ProdutosComponent implements OnInit {
   produtoPendingDelete: Produto | null = null;
   confirmDialogOpen = false;
   confirmDialogMessage = '';
+
+  searchTerm = signal('');
+  statusFilter = signal<StatusFilter>('todos');
+
+  produtosFiltrados = computed(() => {
+    const term = this.normalize(this.searchTerm());
+    const status = this.statusFilter();
+
+    return this.produtos.filter((produto) => {
+      const matchesTerm =
+        !term ||
+        this.normalize(produto.codigo).includes(term) ||
+        this.normalize(produto.nome).includes(term) ||
+        this.normalize(produto.linha).includes(term);
+
+      const matchesStatus =
+        status === 'todos' ||
+        (status === 'ativos' && produto.ativo) ||
+        (status === 'inativos' && !produto.ativo);
+
+      return matchesTerm && matchesStatus;
+    });
+  });
 
   loading = true;
   saving = false;
@@ -839,5 +925,18 @@ export class ProdutosComponent implements OnInit {
         this.errorMessage = 'Erro ao excluir produto.';
       },
     });
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.statusFilter.set('todos');
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }
