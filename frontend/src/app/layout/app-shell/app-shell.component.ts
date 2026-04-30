@@ -170,17 +170,18 @@ import { PermissionService } from '../../core/services/permission.service';
       .app-shell {
         min-height: 100vh;
         width: 100%;
-        display: grid;
-        grid-template-columns: 280px minmax(0, 1fr);
+        display: block;
         background:
           radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 30%),
           linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
       }
 
       .sidebar {
-        position: sticky;
-        top: 0;
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 280px;
         height: 100vh;
+        height: 100dvh;
         padding: 16px;
         background: rgba(255, 255, 255, 0.92);
         border-right: 1px solid rgba(226, 232, 240, 0.95);
@@ -190,10 +191,20 @@ import { PermissionService } from '../../core/services/permission.service';
         gap: 18px;
         z-index: 50;
         transition: box-shadow 0.2s ease;
+        box-sizing: border-box;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
 
       .sidebar:hover {
         box-shadow: 18px 0 50px rgba(15, 23, 42, 0.08);
+      }
+
+      .sidebar-brand,
+      .sidebar-nav,
+      .sidebar-footer {
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .sidebar-brand {
@@ -238,9 +249,11 @@ import { PermissionService } from '../../core/services/permission.service';
         display: flex;
         flex-direction: column;
         gap: 8px;
+        align-items: stretch;
       }
 
       .sidebar-nav a {
+        width: 100%;
         min-height: 48px;
         display: flex;
         align-items: center;
@@ -250,6 +263,7 @@ import { PermissionService } from '../../core/services/permission.service';
         color: #475569;
         font-size: 15px;
         font-weight: 800;
+        box-sizing: border-box;
         transition:
           background-color 0.2s ease,
           color 0.2s ease,
@@ -290,9 +304,12 @@ import { PermissionService } from '../../core/services/permission.service';
         display: flex;
         flex-direction: column;
         gap: 12px;
+        align-items: stretch;
+        padding-top: 10px;
       }
 
       .user-card {
+        width: 100%;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 18px;
@@ -300,6 +317,7 @@ import { PermissionService } from '../../core/services/permission.service';
         display: flex;
         flex-direction: column;
         gap: 4px;
+        box-sizing: border-box;
       }
 
       .user-card small,
@@ -336,6 +354,7 @@ import { PermissionService } from '../../core/services/permission.service';
         font-weight: 800;
         cursor: pointer;
         box-shadow: 0 12px 24px rgba(220, 38, 38, 0.18);
+        box-sizing: border-box;
       }
 
       .main-area {
@@ -343,6 +362,7 @@ import { PermissionService } from '../../core/services/permission.service';
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        margin-left: 280px;
       }
 
       .topbar {
@@ -440,13 +460,18 @@ import { PermissionService } from '../../core/services/permission.service';
       }
 
       @media (max-width: 1280px) {
-        .app-shell {
-          grid-template-columns: 250px minmax(0, 1fr);
-        }
-
         .sidebar {
+          width: 250px;
           padding: 12px;
           gap: 14px;
+        }
+
+        .main-area {
+          margin-left: 250px;
+        }
+
+        .sidebar-footer {
+          padding-top: 8px;
         }
 
         .sidebar-brand {
@@ -488,14 +513,16 @@ import { PermissionService } from '../../core/services/permission.service';
       }
 
       @media (max-width: 1100px) {
-        .app-shell {
-          display: block;
+        .main-area {
+          margin-left: 0;
         }
 
         .sidebar {
           position: fixed;
           inset: 0 auto 0 0;
           width: min(310px, calc(100vw - 30px));
+          height: 100vh;
+          height: 100dvh;
           transform: translateX(-104%);
           transition: transform 0.24s ease, box-shadow 0.2s ease;
           border-right: 1px solid #e2e8f0;
