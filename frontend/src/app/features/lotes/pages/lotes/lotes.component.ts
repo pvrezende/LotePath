@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProdutoService } from '../../../produtos/services/produto.service';
 import { Produto } from '../../../produtos/models/produto.model';
 import { LoteService } from '../../services/lote.service';
@@ -10,11 +10,22 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
+type LoteStatusFilter =
+  | 'todos'
+  | 'em_producao'
+  | 'aguardando_inspecao'
+  | 'aprovado'
+  | 'aprovado_restricao'
+  | 'reprovado';
+
+type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
+
 @Component({
   selector: 'app-lotes',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     EmptyStateComponent,
     StatusBadgeComponent,
@@ -34,8 +45,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 
         <div class="hero-badge">
           <span class="hero-label">Lotes exibidos</span>
-          <strong>{{ lotes.length }}</strong>
-          <small>registros carregados</small>
+          <strong>{{ lotesFiltrados().length }}</strong>
+          <small>de {{ lotes.length }} registro(s)</small>
         </div>
       </div>
 
@@ -151,11 +162,69 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             </div>
 
             <div class="list-actions">
-              <span class="card-chip">{{ lotes.length }} lote(s)</span>
+              <span class="card-chip">{{ lotesFiltrados().length }} lote(s)</span>
               <button type="button" class="secondary-btn" (click)="loadLotes()">
                 Atualizar
               </button>
             </div>
+          </div>
+
+
+          <div class="filters-card">
+            <div class="filter-group search-group">
+              <label for="searchTerm">Buscar lote</label>
+              <input
+                id="searchTerm"
+                type="text"
+                [ngModel]="searchTerm()"
+                (ngModelChange)="searchTerm.set($event)"
+                placeholder="Número, produto ou operador"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="statusFilter">Status</label>
+              <select
+                id="statusFilter"
+                [ngModel]="statusFilter()"
+                (ngModelChange)="statusFilter.set($event)"
+              >
+                <option value="todos">Todos</option>
+                <option value="em_producao">Em produção</option>
+                <option value="aguardando_inspecao">Aguardando inspeção</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="aprovado_restricao">Aprovado com restrição</option>
+                <option value="reprovado">Reprovado</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="turnoFilter">Turno</label>
+              <select
+                id="turnoFilter"
+                [ngModel]="turnoFilter()"
+                (ngModelChange)="turnoFilter.set($event)"
+              >
+                <option value="todos">Todos</option>
+                <option value="manha">Manhã</option>
+                <option value="tarde">Tarde</option>
+                <option value="noite">Noite</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="dataFilter">Data de produção</label>
+              <input
+                id="dataFilter"
+                type="date"
+                [ngModel]="dataFilter()"
+                (ngModelChange)="dataFilter.set($event)"
+              />
+            </div>
+
+            <button type="button" class="clear-btn" (click)="clearFilters()">
+              Limpar filtros
+            </button>
           </div>
 
           @if (loading) {
@@ -163,9 +232,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
               <div class="loading-line"></div>
               <p>Carregando lotes...</p>
             </div>
-          } @else if (lotes.length > 0) {
+          } @else if (lotesFiltrados().length > 0) {
             <div class="mobile-lote-list">
-              @for (lote of lotes; track lote.id) {
+              @for (lote of lotesFiltrados(); track lote.id) {
                 <article class="mobile-lote-card">
                   <div class="mobile-lote-top">
                     <strong>{{ lote.numero_lote }}</strong>
@@ -174,6 +243,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 
                   <div class="mobile-lote-info">
                     <span><b>Produto:</b> {{ lote.produto.nome }}</span>
+                    <span><b>Operador:</b> {{ lote.operador.nome }}</span>
                     <span><b>Data:</b> {{ formatDate(lote.data_producao) }}</span>
                     <span><b>Turno:</b> {{ formatTurno(lote.turno) }}</span>
                     <span><b>Quantidade:</b> {{ lote.quantidade_prod }}</span>
@@ -216,6 +286,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   <tr>
                     <th>Número</th>
                     <th>Produto</th>
+                    <th>Operador</th>
                     <th>Data</th>
                     <th>Turno</th>
                     <th>Quantidade</th>
@@ -224,10 +295,11 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   </tr>
                 </thead>
                 <tbody>
-                  @for (lote of lotes; track lote.id) {
+                  @for (lote of lotesFiltrados(); track lote.id) {
                     <tr>
                       <td class="strong">{{ lote.numero_lote }}</td>
                       <td>{{ lote.produto.nome }}</td>
+                      <td>{{ lote.operador.nome }}</td>
                       <td>{{ formatDate(lote.data_producao) }}</td>
                       <td>{{ formatTurno(lote.turno) }}</td>
                       <td>{{ lote.quantidade_prod }}</td>
@@ -270,8 +342,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             </div>
           } @else {
             <app-empty-state
-              title="Nenhum lote cadastrado"
-              description="Abra o primeiro lote para iniciar o controle de produção."
+              title="Nenhum lote encontrado"
+              description="Ajuste os filtros ou abra um novo lote para iniciar o controle de produção."
             />
           }
         </section>
@@ -383,7 +455,8 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
       .form-card,
       .list-card,
       .modal-card,
-      .feedback-box {
+      .feedback-box,
+      .filters-card {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(226, 232, 240, 0.95);
         box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
@@ -508,6 +581,40 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         gap: 10px;
         flex-wrap: wrap;
         justify-content: flex-end;
+      }
+
+
+      .filters-card {
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 190px 150px 180px auto;
+        gap: 14px;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .clear-btn {
+        height: 44px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 12px;
+        background: #f1f5f9;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .clear-btn:hover {
+        transform: translateY(-1px);
       }
 
       .form-group {
@@ -818,6 +925,10 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         .content-grid {
           grid-template-columns: 1fr;
         }
+
+        .filters-card {
+          grid-template-columns: 1fr 1fr;
+        }
       }
 
       @media (max-width: 768px) {
@@ -847,6 +958,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           display: flex;
         }
 
+        .filters-card,
         .modal-grid,
         .form-row {
           grid-template-columns: 1fr;
@@ -877,6 +989,34 @@ export class LotesComponent implements OnInit {
 
   produtos: Produto[] = [];
   lotes: Lote[] = [];
+
+  searchTerm = signal('');
+  statusFilter = signal<LoteStatusFilter>('todos');
+  turnoFilter = signal<TurnoFilter>('todos');
+  dataFilter = signal('');
+
+  lotesFiltrados = computed(() => {
+    const term = this.normalize(this.searchTerm());
+    const status = this.statusFilter();
+    const turno = this.turnoFilter();
+    const data = this.dataFilter();
+
+    return this.lotes.filter((lote) => {
+      const matchesTerm =
+        !term ||
+        this.normalize(lote.numero_lote).includes(term) ||
+        this.normalize(lote.produto?.nome).includes(term) ||
+        this.normalize(lote.produto?.codigo).includes(term) ||
+        this.normalize(lote.operador?.nome).includes(term) ||
+        this.normalize(lote.operador?.email).includes(term);
+
+      const matchesStatus = status === 'todos' || lote.status === status;
+      const matchesTurno = turno === 'todos' || lote.turno === turno;
+      const matchesData = !data || String(lote.data_producao).slice(0, 10) === data;
+
+      return matchesTerm && matchesStatus && matchesTurno && matchesData;
+    });
+  });
   selectedLote: Lote | null = null;
   editingLoteId: string | null = null;
   lotePendingDelete: Lote | null = null;
@@ -1078,6 +1218,21 @@ export class LotesComponent implements OnInit {
   closeDetails(): void {
     this.selectedLote = null;
     document.body.classList.remove('modal-open');
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.statusFilter.set('todos');
+    this.turnoFilter.set('todos');
+    this.dataFilter.set('');
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 
   formatTurno(turno: string): string {
