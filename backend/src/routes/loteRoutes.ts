@@ -26,6 +26,12 @@ loteRoutes.get(
 );
 
 loteRoutes.get(
+    "/:id/pdf",
+    authorizeRoles(Perfil.OPERADOR, Perfil.INSPETOR, Perfil.GESTOR),
+    loteController.generatePdf.bind(loteController)
+);
+
+loteRoutes.get(
     "/:id",
     authorizeRoles(Perfil.OPERADOR, Perfil.INSPETOR, Perfil.GESTOR),
     loteController.getById.bind(loteController)

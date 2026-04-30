@@ -320,6 +320,14 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
                             Detalhes
                           </button>
 
+                          <button
+                            type="button"
+                            class="pdf-btn"
+                            (click)="downloadPdf(lote)"
+                          >
+                            PDF
+                          </button>
+
                           @if (isGestor) {
                             <button
                               type="button"
@@ -728,6 +736,11 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
         color: #0369a1;
       }
 
+      .pdf-btn {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
       .edit-btn {
         background: #fef3c7;
         color: #b45309;
@@ -741,6 +754,7 @@ type TurnoFilter = 'todos' | 'manha' | 'tarde' | 'noite';
       .primary-btn:hover,
       .secondary-btn:hover,
       .details-btn:hover,
+      .pdf-btn:hover,
       .edit-btn:hover,
       .delete-btn:hover {
         transform: translateY(-1px);
@@ -1184,6 +1198,22 @@ export class LotesComponent implements OnInit {
       turno: '',
       quantidade_prod: null,
       observacoes: '',
+    });
+  }
+
+  downloadPdf(lote: Lote): void {
+    this.loteService.downloadLotePdf(lote.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio-${lote.numero_lote}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.errorMessage = 'Erro ao gerar PDF do lote.';
+      },
     });
   }
 

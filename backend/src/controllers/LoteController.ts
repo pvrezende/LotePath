@@ -81,4 +81,21 @@ export class LoteController {
             return next(error);
         }
     }
+
+    async generatePdf(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const pdfBuffer = await this.loteService.generatePdfReport(id);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="relatorio-lote-${id}.pdf"`
+            );
+
+            return res.status(200).send(pdfBuffer);
+        } catch (error) {
+            return next(error);
+        }
+    }
 }
