@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LotePath API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui.css" />
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.0/swagger-ui-bundle.js"></script>
+  <style>
+    body { margin: 0; background: #f8fafc; }
+    #swagger-ui { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+    .swagger-ui .topbar { display: none; }
+    .swagger-ui .info .title { font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script>
+    window.onload = () => {
+      SwaggerUIBundle({
+        url: './openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.StandalonePreset],
+        layout: "BaseLayout"
+      });
+    };
+  </script>
+</body>
+</html>
