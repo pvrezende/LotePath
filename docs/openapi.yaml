@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: LotePath API
+  description: Documentação interativa da API de rastreamento de lotes industriais
+  version: 1.0.0
+  contact:
+    name: PV Rezende
+    url: https://github.com/pvrezende/LotePath
+servers:
+  - url: http://localhost:3000
+    description: Servidor local de desenvolvimento
+
+paths:
+  /lotes:
+    post:
+      summary: Criar novo lote
+      description: Cria um lote de produção vinculado a produto, operador e turno. Gera número automático e status "em_producao".
+      operationId: createLote
+      tags: [Lotes]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [produtoId, data_producao, turno, operadorId, quantidade_prod]
+              properties:
+                produtoId: { type: string, format: uuid, example: "p9876543-21fe-dcba-0987-654321fedcba" }
+                data_producao: { type: string, format: date, example: "2026-05-13" }
+                turno: { type: string, enum: [manha, tarde, noite], example: "tarde" }
+                operadorId: { type: string, format: uuid, example: "u1122334-4556-6778-8990-aabbccddeeff" }
+                quantidade_prod: { type: integer, minimum: 1, example: 250 }
+                observacoes: { type: string, nullable: true, example: "Produção normal" }
+      responses:
+        '201': { description: Lote criado, content: { application/json: { schema: { $ref: '#/components/schemas/Lote' } } } }
+        '400': { description: Validação falhou }
+        '401': { description: Token inválido }
+        '403': { description: Permissão negada }
+    get:
+      summary: Listar lotes
+      description: Retorna lista paginada de lotes com filtros opcionais.
+      operationId: listLotes
+      tags: [Lotes]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [em_producao, finalizado, cancelado] }
+      responses:
+        '200': { description: Lista de lotes, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Lote' } } } } }
+
+  /lotes/{id}:
+    get:
+      summary: Buscar lote por ID
+      description: Retorna dados completos de um lote específico.
+      operationId: getLoteById
+      tags: [Lotes]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Lote encontrado, content: { application/json: { schema: { $ref: '#/components/schemas/Lote' } } } }
+        '404': { description: Lote não encontrado }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Lote:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        numero_lote: { type: string, example: "LT-2026-0042" }
+        produto: { type: object, properties: { id: { type: string }, nome: { type: string } } }
+        data_producao: { type: string, format: date }
+        turno: { type: string }
+        operador: { type: object, properties: { id: { type: string }, nome: { type: string } } }
+        quantidade_prod: { type: integer }
+        quantidade_repr: { type: integer }
+        status: { type: string }
+        observacoes: { type: string, nullable: true }
+        aberto_em: { type: string, format: date-time }
+        encerrado_em: { type: string, format: date-time, nullable: true }
